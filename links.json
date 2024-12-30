@@ -39,6 +39,10 @@
                   {
                     "name": "OneDrive",
                     "url": "https://nusu-my.sharepoint.com/personal/bliu_nus_edu_sg/_layouts/15/onedrive.aspx?ga=1"
+                  },
+                  {
+                    "name": "Server Status",
+                    "url": "https://nscc.junbingao.com"
                   }
                 ]
               },
@@ -56,17 +60,17 @@
                   {
                     "name": "HomeWeb",
                     "url": "https://github.com/gaojunbin/HomeWeb"
+                  },
+                  {
+                    "name": "NewTab",
+                    "url": "https://github.com/gaojunbin/NewTab"
                   }
                 ]
               },
               
               {
-                "category": "VPS 1",
+                "category": "VPS (hold)",
                 "links": [
-                  {
-                    "name": "DMIT",
-                    "url": "https://www.dmit.io"
-                  },
                   {
                     "name": "Bandwagon",
                     "url": "https://bandwagonhost.com"
@@ -76,14 +80,42 @@
                     "url": "https://greencloudvps.com"
                   },
                   {
-                    "name": "crunchbits",
-                    "url": "https://crunchbits.com"
+                    "name": "Lala",
+                    "url": "https://lala.gg"
+                  },
+                  {
+                    "name": "ClawCloud",
+                    "url": "https://claw.cloud"
+                  },
+                  {
+                    "name": "酷雪云",
+                    "url": "https://kuxueyun.com"
+                  },
+                  {
+                    "name": "RackNerd",
+                    "url": "https://www.racknerd.com"
+                  },
+                  {
+                    "name": "Azure",
+                    "url": "https://portal.azure.com"
+                  },
+                  {
+                    "name": "Google Cloud",
+                    "url": "https://cloud.google.com"
+                  },
+                  {
+                    "name": "OVH",
+                    "url": "https://www.ovh.com"
                   }
                 ]
               },
               {
-                "category": "VPS 2",
+                "category": "VPS",
                 "links": [
+                  {
+                    "name": "DMIT",
+                    "url": "https://www.dmit.io"
+                  },
                   {
                     "name": "DigitalOcean",
                     "url": "https://www.digitalocean.com"
@@ -91,10 +123,6 @@
                   {
                     "name": "Hetzner",
                     "url": "https://www.hetzner.com"
-                  },
-                  {
-                    "name": "Google Cloud",
-                    "url": "https://cloud.google.com"
                   },
                   {
                     "name": "Vultr",
