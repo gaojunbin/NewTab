@@ -23,10 +23,10 @@
         {"name":"Vertex ", "url":"vt.junbingao.com", "icon":"clipboard-flow"},
         {"name":"Frp-HK","url":"frp.junbingao.com","icon":"arrow-decision-auto-outline"},
         {"name":"Frp-SG","url":"frpsg.junbingao.com","icon":"arrow-decision-auto-outline"},
-        {"name":"Frp-IEPL","url":"frpiepl.junbingao.com","icon":"arrow-decision-auto-outline"},
         {"name":"RustDesk-HK", "url":"rustdesk.junbingao.com", "icon":"remote-desktop"},
         {"name":"RustDesk-SG", "url":"rustdesksg.junbingao.com", "icon":"remote-desktop"},
         {"name":"GCR", "url":"gcr.junbingao.com", "icon":"powershell"},
-        {"name":"NAS", "url":"nas.junbingao.com", "icon":"nas"}
+        {"name":"EMBY", "url":"cinema.junbingao.com", "icon":"emby"},
+        {"name":"EMBY Console", "url":"embycontrol.junbingao.com", "icon":"emby"}
     ]
 }

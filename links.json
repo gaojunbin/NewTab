@@ -72,24 +72,16 @@
                 "category": "VPS (hold)",
                 "links": [
                   {
-                    "name": "Bandwagon",
-                    "url": "https://bandwagonhost.com"
-                  },
-                  {
                     "name": "GreenCloud",
                     "url": "https://greencloudvps.com"
-                  },
-                  {
-                    "name": "Lala",
-                    "url": "https://lala.gg"
                   },
                   {
                     "name": "ClawCloud",
                     "url": "https://claw.cloud"
                   },
                   {
-                    "name": "酷雪云",
-                    "url": "https://kuxueyun.com"
+                    "name": "Lala",
+                    "url": "https://lala.gg"
                   },
                   {
                     "name": "RackNerd",
@@ -117,6 +109,10 @@
                     "url": "https://www.dmit.io"
                   },
                   {
+                    "name": "Bandwagon",
+                    "url": "https://bandwagonhost.com"
+                  },
+                  {
                     "name": "DigitalOcean",
                     "url": "https://www.digitalocean.com"
                   },
@@ -127,6 +123,10 @@
                   {
                     "name": "Vultr",
                     "url": "https://www.vultr.com"
+                  },
+                  {
+                    "name": "酷雪云",
+                    "url": "https://kuxueyun.com"
                   }
                 ]
               },
