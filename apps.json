@@ -27,6 +27,8 @@
         {"name":"RustDesk-SG", "url":"rustdesksg.junbingao.com", "icon":"remote-desktop"},
         {"name":"GCR", "url":"gcr.junbingao.com", "icon":"powershell"},
         {"name":"EMBY", "url":"cinema.junbingao.com", "icon":"emby"},
-        {"name":"EMBY Console", "url":"embycontrol.junbingao.com", "icon":"emby"}
+        {"name":"EMBY Console", "url":"embycontrol.junbingao.com", "icon":"emby"},
+        {"name": "JunbinNAS", "url":"nas.junbingao.com", "icon":"nas"},
+        {"name": "NAS qbittorrent", "url":"nasqb.junbingao.com", "icon":"download-circle-outline" }
     ]
 }
