@@ -30,6 +30,8 @@
         {"name":"EMBY", "url":"cinema.junbingao.com", "icon":"emby"},
         {"name":"EMBY Console", "url":"embycontrol.junbingao.com", "icon":"emby"},
         {"name": "JunbinNAS", "url":"nas.junbingao.com", "icon":"nas"},
-        {"name": "NAS qbittorrent", "url":"nasqb.junbingao.com", "icon":"download-circle-outline" }
+        {"name": "NAS QB", "url":"nasqb.junbingao.com", "icon":"download-circle-outline" },
+        {"name": "NAS TR", "url":"nastr.junbingao.com", "icon":"download-circle-outline" },
+        {"name": "NAS IYUU", "url":"nasiyuu.junbingao.com", "icon":"alpha-i" }
     ]
 }
