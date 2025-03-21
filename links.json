@@ -84,16 +84,16 @@
                     "url": "https://lala.gg"
                   },
                   {
+                    "name": "Bandwagon",
+                    "url": "https://bandwagonhost.com"
+                  },
+                  {
                     "name": "RackNerd",
                     "url": "https://www.racknerd.com"
                   },
                   {
                     "name": "Azure",
                     "url": "https://portal.azure.com"
-                  },
-                  {
-                    "name": "Google Cloud",
-                    "url": "https://cloud.google.com"
                   },
                   {
                     "name": "OVH",
@@ -109,8 +109,8 @@
                     "url": "https://www.dmit.io"
                   },
                   {
-                    "name": "Bandwagon",
-                    "url": "https://bandwagonhost.com"
+                    "name": "Google Cloud",
+                    "url": "https://cloud.google.com"
                   },
                   {
                     "name": "DigitalOcean",
@@ -144,6 +144,10 @@
                   {
                     "name": "nodeseek",
                     "url": "https://www.nodeseek.com"
+                  },
+                  {
+                    "name": "PT invite",
+                    "url": "https://invites.fun"
                   }
                 ]
               }
