@@ -2,6 +2,7 @@
     "apps" : [
         {"name":"Proxy Manager","url":"proxy.junbingao.com","icon":"arrow-decision"},
         {"name":"HomeWeb","url":"junbingao.com","icon":"home-circle-outline"},
+        {"name":"Junbin Quant", "url":"quant.junbingao.com","icon":"bitcoin"},
         {"name":"Junbin GitHub","url":"github.com/gaojunbin","icon":"github"},
         {"name":"Junbin Server","url":"nezha.junbingao.com","icon":"server"},
         {"name":"Junbin Drive","url":"drive.junbingao.com","icon":"google-drive"},
