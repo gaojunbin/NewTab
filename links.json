@@ -96,8 +96,8 @@
                     "url": "https://portal.azure.com"
                   },
                   {
-                    "name": "AWS",
-                    "url": "https://aws.amazon.com"
+                    "name": "bytevirt Nat",
+                    "url": "https://bytevirt.com/"
                   }
                 ]
               },
@@ -107,6 +107,10 @@
                   {
                     "name": "Google Cloud",
                     "url": "https://cloud.google.com"
+                  },
+                  {
+                    "name": "AWS",
+                    "url": "https://aws.amazon.com"
                   },
                   {
                     "name": "DigitalOcean",
