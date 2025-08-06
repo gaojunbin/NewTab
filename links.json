@@ -84,8 +84,16 @@
                     "url": "https://bandwagonhost.com"
                   },
                   {
+                    "name": "HOST-C",
+                    "url": "https://host-c.com"
+                  },
+                  {
                     "name": "ClawCloud",
                     "url": "https://claw.cloud"
+                  },
+                  {
+                    "name": "WaleHost",
+                    "url": "https://walehost.com"
                   },
                   {
                     "name": "RackNerd",
