@@ -6,7 +6,7 @@
             "apps": [
                 {"name":"BetaQuant", "url":"quant.junbingao.com","icon":"bitcoin"},
                 {"name":"GCR", "url":"gcr.junbingao.com", "icon":"powershell"},
-                {"name":"Junbin GitHub", "url":"ghproxy.junbingao.com", "icon":"github"},
+                {"name":"GitHub Proxy", "url":"ghproxy.junbingao.com", "icon":"github"},
                 {"name":"Junbin HomeWeb","url":"junbingao.com","icon":"home-circle-outline"},
                 {"name":"IT Toolkit","url":"it.junbingao.com", "icon":"toolbox"},
                 {"name":"PDF Toolkit", "url":"pdf.junbingao.com", "icon":"file-pdf-box"},
