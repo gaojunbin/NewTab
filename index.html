@@ -84,19 +84,27 @@
         <section id="apps">
             <script type="text/handlebars-template" id="apps-template">
             <h3>Applications</h3>
-            <div id="apps_loop">
-                {{#apps}}
-                    <div class="apps_item">
-                        <div class="apps_icon">
-                            <span class="iconify icon" data-icon="mdi-{{icon}}"></span>
-                        </div>
-                        <div class="apps_text">
-                            <a href="http://{{url}}" {{#if target}}target="{{target}}"{{/if}} >{{name}}</a>
-                            <span id="app-address">{{url}}</span>
-                        </div>
+            {{#appGroups}}
+                <div class="app-group">
+                    <div class="app-group-header">
+                        <span class="iconify app-group-icon" data-icon="mdi-{{icon}}"></span>
+                        <h4 class="app-group-title">{{category}}</h4>
                     </div>
-                {{/apps}}
-            </div>
+                    <div class="apps_loop">
+                        {{#apps}}
+                            <div class="apps_item">
+                                <div class="apps_icon">
+                                    <span class="iconify icon" data-icon="mdi-{{icon}}"></span>
+                                </div>
+                                <div class="apps_text">
+                                    <a href="http://{{url}}" {{#if target}}target="{{target}}"{{/if}} >{{name}}</a>
+                                    <span class="app-address">{{url}}</span>
+                                </div>
+                            </div>
+                        {{/apps}}
+                    </div>
+                </div>
+            {{/appGroups}}
             </script>
         </section>
 

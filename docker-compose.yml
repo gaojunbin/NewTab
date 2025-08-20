@@ -1,4 +1,3 @@
-version: '3'
 services:
   newtab:
     build:
@@ -7,6 +6,7 @@ services:
     container_name: newtab
     restart: unless-stopped
     volumes:
-      - ./:/var/www/html
+      - ./:/var/www/html:Z
     ports:
       - 8015:80
+    privileged: true
