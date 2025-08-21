@@ -27,7 +27,7 @@
                 {"name":"Junbin NPM","url":"proxy.junbingao.com","icon":"arrow-decision"},
                 {"name":"Junbin GitHub","url":"github.com/gaojunbin","icon":"github"},
                 {"name":"Junbin Docker","url":"docker.junbingao.com","icon":"docker"},
-                {"name":"Junbin Server","url":"nezha.junbingao.com","icon":"server"},
+                {"name":"Junbin Server","url":"server.junbingao.com","icon":"server"},
                 {"name":"Junbin IEPL", "url": "iepl.junbingao.com", "icon":"web"},
                 {"name":"Junbin Drive","url":"drive.junbingao.com","icon":"google-drive"},
                 {"name":"Junbin Mail","url":"mail.junbingao.com/admin","icon":"email"},
