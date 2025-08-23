@@ -10,7 +10,7 @@
                 {"name":"Junbin Cinema", "url":"cinema.junbingao.com", "icon":"emby"},
                 {"name":"Junbin Meet","url":"meet.junbingao.com","icon":"laptop-account"},
                 {"name":"Junbin Survey","url":"survey.junbingao.com","icon":"clipboard-text"},
-                {"name":"GitHub Proxy", "url":"ghproxy.junbingao.com", "icon":"github"},
+                {"name":"Hub Proxy", "url":"hubproxy.junbingao.com", "icon":"github"},
                 {"name":"Junbin HomeWeb","url":"junbingao.com","icon":"home-circle-outline"},
                 {"name":"IT Toolkit","url":"it.junbingao.com", "icon":"toolbox"},
                 {"name":"PDF Toolkit", "url":"pdf.junbingao.com", "icon":"file-pdf-box"},
