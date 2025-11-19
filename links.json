@@ -238,6 +238,19 @@
                     "url": "https://linux.do"
                   }
                 ]
+              },
+              {
+                "category": "Others",
+                "links": [
+                  {
+                    "name": "App Store Price",
+                    "url": "https://app.vbr.me"
+                  },
+                  {
+                    "name": "App Store Price",
+                    "url": "https://iapdb.top/zh"
+                  }
+                ]
               }
 
             ]
