@@ -69,7 +69,8 @@
     <main id="container" class="fade">
 
         <section id="search">
-            <input name="keywords" type="text" id="keywords" placeholder="Search in Google (Default). See more details in the Options button on the left bottom." size="50" spellcheck="false" autofocus="true" onkeydown="handleKeyPress(event)">
+            <input name="keywords" type="text" id="keywords" placeholder="Search in Google (Default). See more details in the Options button on the left bottom." size="50" spellcheck="false" autofocus="true" onkeydown="handleKeyPress(event)" oninput="handleInput(event)">
+            <div id="search-suggestions" class="suggestions-container"></div>
         </section>
 
         <section id="header">

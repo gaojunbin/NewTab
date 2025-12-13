@@ -619,3 +619,67 @@ table a{
 		display: none;
 	}
 }
+
+/* Search Suggestions */
+#search {
+	position: relative;
+}
+
+.suggestions-container {
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	background-color: #ffffff;
+	border: 1px solid #66afe9;
+	border-top: none;
+	border-radius: 0 0 6px 6px;
+	max-height: 300px;
+	overflow-y: auto;
+	z-index: 100;
+	display: none;
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.suggestions-container.active {
+	display: block;
+}
+
+.suggestion-item {
+	padding: 12px 14px;
+	cursor: pointer;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	transition: background-color 0.15s ease;
+	border-bottom: 1px solid #e8e8e8;
+}
+
+.suggestion-item:last-child {
+	border-bottom: none;
+}
+
+.suggestion-item:hover,
+.suggestion-item.selected {
+	background-color: #e8f4fc;
+}
+
+.suggestion-prefix {
+	font-weight: 700;
+	color: #1a73e8;
+	font-family: monospace;
+	font-size: 14px;
+	min-width: 50px;
+}
+
+.suggestion-name {
+	color: #333333;
+	font-size: 14px;
+	flex: 1;
+	margin-left: 12px;
+}
+
+.suggestion-hint {
+	color: #888888;
+	font-size: 12px;
+}
