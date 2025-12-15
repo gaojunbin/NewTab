@@ -1,0 +1,261 @@
+{
+            "bookmarks" : [
+              {
+                "category": "NUS",
+                "links": [
+                  {
+                    "name": "Canvas",
+                    "url": "https://canvas.nus.edu.sg"
+                  },
+                  {
+                    "name": "EduRec",
+                    "url": "https://myedurec.nus.edu.sg"
+                  },
+                  {
+                    "name": "NUS Modes",
+                    "url": "https://nusmods.com/timetable/sem-1"
+                  },
+                  {
+                    "name": "EVS",
+                    "url": "https://nus-utown.evs.com.sg"
+                  }
+                ]
+              },
+              {
+                "category": "Liulab",
+                "links": [
+                  {
+                    "name": "Zoom",
+                    "url": "https://nus-sg.zoom.us/my/genomicdatascience"
+                  },
+                  {
+                    "name": "GitHub",
+                    "url": "https://github.com/boxiangliulab"
+                  },
+                  {
+                    "name": "LabWeb",
+                    "url": "https://boxiangliulab.com"
+                  },
+                  {
+                    "name": "OneDrive",
+                    "url": "https://nusu-my.sharepoint.com/personal/bliu_nus_edu_sg/_layouts/15/onedrive.aspx?ga=1"
+                  },
+                  {
+                    "name": "Server Status",
+                    "url": "http://nscc.junbingao.com"
+                  }
+                ]
+              },
+              {
+                "category": "MyGithub",
+                "links": [
+                  {
+                    "name": "My Stars",
+                    "url": "https://github.com/gaojunbin?tab=stars"
+                  },
+                  {
+                    "name": "GCR",
+                    "url": "https://github.com/gaojunbin/GCR"
+                  },
+                  {
+                    "name": "HomeWeb",
+                    "url": "https://github.com/gaojunbin/HomeWeb"
+                  },
+                  {
+                    "name": "NewTab",
+                    "url": "https://github.com/gaojunbin/NewTab"
+                  }
+                ]
+              },
+              
+              {
+                "category": "VPS (hold)",
+                "links": [
+                  {
+                    "name": "GreenCloud",
+                    "url": "https://greencloudvps.com"
+                  },
+                  {
+                    "name": "DMIT",
+                    "url": "https://www.dmit.io"
+                  },
+                  {
+                    "name": "Bandwagon",
+                    "url": "https://bandwagonhost.com"
+                  },
+                  {
+                    "name": "HOST-C",
+                    "url": "https://host-c.com"
+                  },
+                  {
+                    "name": "ClawCloud",
+                    "url": "https://claw.cloud"
+                  },
+                  {
+                    "name": "WaleHost",
+                    "url": "https://walehost.com"
+                  },
+                  {
+                    "name": "RackNerd",
+                    "url": "https://www.racknerd.com"
+                  },
+                  {
+                    "name": "Azure",
+                    "url": "https://portal.azure.com"
+                  },
+                  {
+                    "name": "bytevirt Nat",
+                    "url": "https://bytevirt.com/"
+                  }
+                ]
+              },
+              {
+                "category": "VPS",
+                "links": [
+                  {
+                    "name": "Google Cloud",
+                    "url": "https://cloud.google.com"
+                  },
+                  {
+                    "name": "AWS",
+                    "url": "https://aws.amazon.com"
+                  },
+                  {
+                    "name": "DigitalOcean",
+                    "url": "https://www.digitalocean.com"
+                  },
+                  {
+                    "name": "Hetzner",
+                    "url": "https://www.hetzner.com"
+                  },
+                  {
+                    "name": "Vultr",
+                    "url": "https://www.vultr.com"
+                  },
+                  {
+                    "name": "OVH",
+                    "url": "https://www.ovh.com"
+                  }
+                ]
+              },
+              {
+                "category": "IEPL/IPLC",
+                "links": [
+                  {
+                    "name": "TapHip",
+                    "url": "https://www.taphip.com"
+                  },
+                  {
+                    "name": "Fuyun",
+                    "url": "https://fuyunidc.com"
+                  },
+                  {
+                    "name": "Lala",
+                    "url": "https://lala.gg"
+                  },
+                  {
+                    "name": "FeiZai",
+                    "url": "https://www.yridc.net.cn"
+                  }
+                ]
+              },
+              {
+                "category": "IEPL forwarding",
+                "links": [
+                  {
+                    "name": "Nezha(TapHip)",
+                    "url": "https://tunnel.nezha.tech"
+                  },
+                  {
+                    "name": "ZUMO",
+                    "url": "https://zumo.moe"
+                  },
+                  {
+                    "name": "Nya",
+                    "url": "https://nya.trp.sh"
+                  },
+                  {
+                    "name": "NNR",
+                    "url": "https://nnr.moe"
+                  }
+                ]
+              },
+              {
+                "category": "Domain",
+                "links": [
+                  {
+                    "name": "Cloudflare",
+                    "url": "https://www.cloudflare.com"
+                  },
+                  {
+                    "name": "Spaceship",
+                    "url": "https://www.spaceship.com"
+                  },
+                  {
+                    "name": "Nazhumi",
+                    "url": "https://www.nazhumi.com"
+                  }
+                ]
+              },
+              {
+                "category": "IP",
+                "links": [
+                  {
+                    "name": "IP2World",
+                    "url": "https://www.ip2world.com"
+                  },
+                  {
+                    "name": "iproyal",
+                    "url": "https://iproyal.com"
+                  },
+                  {
+                    "name": "vital-proxies",
+                    "url": "https://www.vital-proxies.com"
+                  },
+                  {
+                    "name": "cliproxy",
+                    "url": "https://cliproxy.com"
+                  },
+                  {
+                    "name": "thordata",
+                    "url": "https://www.thordata.com"
+                  }
+                ]
+              },
+              {
+                "category": "Online Forum",
+                "links": [
+                  {
+                    "name": "nodeseek",
+                    "url": "https://www.nodeseek.com"
+                  },
+                  {
+                    "name": "PT invite",
+                    "url": "https://invites.fun"
+                  },
+                  {
+                    "name": "Linux do",
+                    "url": "https://linux.do"
+                  }
+                ]
+              },
+              {
+                "category": "Others",
+                "links": [
+                  {
+                    "name": "App Store Price",
+                    "url": "https://app.vbr.me"
+                  },
+                  {
+                    "name": "App Store Price",
+                    "url": "https://iapdb.top/zh"
+                  },
+                  {
+                    "name":"Cheap Subs",
+                    "url":"https://www.findcheapsubs.com/zh"
+                  }
+                ]
+              }
+
+            ]
+        }

@@ -1,0 +1,277 @@
+{
+  "appGroups": [
+    {
+      "category": "公共服务",
+      "icon": "web",
+      "apps": [
+        {
+          "name": "BetaQuant",
+          "url": "quant.junbingao.com",
+          "icon": "bitcoin",
+          "id": "app-0-0"
+        },
+        {
+          "name": "GCR",
+          "url": "gcr.junbingao.com",
+          "icon": "powershell",
+          "id": "app-0-1"
+        },
+        {
+          "name": "Junbin TV",
+          "url": "tv.junbingao.com",
+          "icon": "television",
+          "id": "app-0-2"
+        },
+        {
+          "name": "Junbin Meet",
+          "url": "meet.junbingao.com",
+          "icon": "laptop-account",
+          "id": "app-0-3"
+        },
+        {
+          "name": "Hub Proxy",
+          "url": "hubproxy.junbingao.com",
+          "icon": "github",
+          "id": "app-0-4"
+        },
+        {
+          "name": "IT Toolkit",
+          "url": "it.junbingao.com",
+          "icon": "toolbox",
+          "id": "app-0-5"
+        },
+        {
+          "name": "PDF Toolkit",
+          "url": "pdf.junbingao.com",
+          "icon": "file-pdf-box",
+          "id": "app-0-6"
+        },
+        {
+          "name": "PDF Translate",
+          "url": "pdftrans.junbingao.com",
+          "icon": "file-pdf-box",
+          "id": "app-0-7"
+        },
+        {
+          "name": "Image Toolkit",
+          "url": "png.junbingao.com",
+          "icon": "image-area",
+          "id": "app-0-8"
+        },
+        {
+          "name": "Web SSH",
+          "url": "ssh.junbingao.com",
+          "icon": "ssh",
+          "id": "app-0-9"
+        },
+        {
+          "name": "Clash-V2R",
+          "url": "subweb.junbingao.com",
+          "icon": "swap-horizontal",
+          "id": "app-0-10"
+        },
+        {
+          "name": "Address Genrate",
+          "url": "addr.junbingao.com",
+          "icon": "map-marker",
+          "id": "app-0-11"
+        }
+      ],
+      "id": "group-0",
+      "collapsed": false
+    },
+    {
+      "category": "个人服务",
+      "icon": "account-settings",
+      "apps": [
+        {
+          "name": "Junbin NPM",
+          "url": "proxy.junbingao.com",
+          "icon": "arrow-decision",
+          "id": "app-1-0"
+        },
+        {
+          "name": "Junbin HomeWeb",
+          "url": "junbingao.com",
+          "icon": "home-circle-outline",
+          "id": "app-1-1"
+        },
+        {
+          "name": "Junbin GitHub",
+          "url": "github.com/gaojunbin",
+          "icon": "github",
+          "id": "app-1-2"
+        },
+        {
+          "name": "Junbin Docker",
+          "url": "docker.junbingao.com",
+          "icon": "docker",
+          "id": "app-1-3"
+        },
+        {
+          "name": "Junbin Server",
+          "url": "server.junbingao.com",
+          "icon": "server",
+          "id": "app-1-4"
+        },
+        {
+          "name": "Junbin IEPL",
+          "url": "iepl.junbingao.com",
+          "icon": "web",
+          "id": "app-1-5"
+        },
+        {
+          "name": "Junbin Drive",
+          "url": "drive.junbingao.com",
+          "icon": "google-drive",
+          "id": "app-1-6"
+        },
+        {
+          "name": "Junbin Mail",
+          "url": "mail.junbingao.com/admin",
+          "icon": "email",
+          "id": "app-1-7"
+        },
+        {
+          "name": "Junbin Live",
+          "url": "live.junbingao.com",
+          "icon": "record-circle-outline",
+          "id": "app-1-8"
+        },
+        {
+          "name": "Junbin News",
+          "url": "news.junbingao.com",
+          "icon": "newspaper",
+          "id": "app-1-9"
+        },
+        {
+          "name": "Junbin Image",
+          "url": "image.junbingao.com",
+          "icon": "image-area",
+          "id": "app-1-10"
+        },
+        {
+          "name": "Junbin Money",
+          "url": "money.junbingao.com",
+          "icon": "currency-usd",
+          "id": "app-1-11"
+        },
+        {
+          "name": "Junbin Password",
+          "url": "password.junbingao.com",
+          "icon": "onepassword",
+          "id": "app-1-12"
+        },
+        {
+          "name": "Junbin MindMap",
+          "url": "mind.junbingao.com",
+          "icon": "brain",
+          "id": "app-1-13"
+        },
+        {
+          "name": "Junbin WebMonitor",
+          "url": "webmonitor.junbingao.com",
+          "icon": "eye-check-outline",
+          "id": "app-1-14"
+        },
+        {
+          "name": "Junbin Backup",
+          "url": "duplicati.junbingao.com",
+          "icon": "backup-restore",
+          "id": "app-1-15"
+        },
+        {
+          "name": "Junbin Nastool",
+          "url": "nastool.junbingao.com",
+          "icon": "multimedia",
+          "id": "app-1-16"
+        },
+        {
+          "name": "JunbinNAS",
+          "url": "nas.junbingao.com",
+          "icon": "nas",
+          "id": "app-1-17"
+        },
+        {
+          "name": "Junbin Vertex",
+          "url": "vt.junbingao.com",
+          "icon": "clipboard-flow",
+          "id": "app-1-18"
+        },
+        {
+          "name": "AI API",
+          "url": "newapi.junbingao.com",
+          "icon": "api",
+          "id": "app-1-19"
+        },
+        {
+          "name": "AI Prompt",
+          "url": "prompt.junbingao.com",
+          "icon": "comment-text-multiple-outline",
+          "id": "app-1-20"
+        },
+        {
+          "name": "Claude2API",
+          "url": "claude2api.junbingao.com",
+          "icon": "api",
+          "id": "app-1-21"
+        },
+        {
+          "name": "RustDesk-HK",
+          "url": "rustdeskhk.junbingao.com",
+          "icon": "remote-desktop",
+          "id": "app-1-22"
+        },
+        {
+          "name": "RustDesk-SG",
+          "url": "rustdesksg.junbingao.com",
+          "icon": "remote-desktop",
+          "id": "app-1-23"
+        },
+        {
+          "name": "RustDesk-US",
+          "url": "rustdeskus.junbingao.com",
+          "icon": "remote-desktop",
+          "id": "app-1-24"
+        },
+        {
+          "name": "Frp-HK",
+          "url": "frphk.junbingao.com",
+          "icon": "arrow-decision-auto-outline",
+          "id": "app-1-25"
+        },
+        {
+          "name": "Frp-SG",
+          "url": "frpsg.junbingao.com",
+          "icon": "arrow-decision-auto-outline",
+          "id": "app-1-26"
+        },
+        {
+          "name": "Frp-US",
+          "url": "frpus.junbingao.com",
+          "icon": "arrow-decision-auto-outline",
+          "id": "app-1-27"
+        },
+        {
+          "name": "Frp-VPN",
+          "url": "frpvpn.junbingao.com",
+          "icon": "arrow-decision-auto-outline",
+          "id": "app-1-28"
+        },
+        {
+          "name": "Clipboard Share",
+          "url": "gcopy.junbingao.com",
+          "icon": "clipboard",
+          "id": "app-1-29"
+        },
+        {
+          "name": "File Share",
+          "url": "paste.junbingao.com",
+          "icon": "file-arrow-left-right",
+          "id": "app-1-30"
+        }
+      ],
+      "id": "group-1"
+    }
+  ]
+}

@@ -1,0 +1,120 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --color-primary: #1a1a2e;
+  --color-accent: #e94560;
+  --color-background: #16213e;
+  --glass-blur: 12px;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Glass Effect Utilities */
+@layer utilities {
+  .glass {
+    @apply backdrop-blur-[12px] bg-white/10 border border-white/20;
+  }
+
+  .glass-dark {
+    @apply backdrop-blur-[12px] bg-black/20 border border-white/10;
+  }
+
+  .glass-light {
+    @apply backdrop-blur-[12px] bg-white/30 border border-white/40;
+  }
+
+  .text-shadow {
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  }
+
+  .hover-lift {
+    @apply transition-transform duration-200 hover:-translate-y-1;
+  }
+
+  .hover-glow {
+    @apply transition-shadow duration-200;
+  }
+
+  .hover-glow:hover {
+    box-shadow: 0 0 20px rgba(var(--color-accent-rgb), 0.4);
+  }
+}
+
+/* Focus Ring Styles */
+.focus-ring {
+  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent;
+}
+
+/* Animation Delays */
+.delay-100 { animation-delay: 100ms; }
+.delay-200 { animation-delay: 200ms; }
+.delay-300 { animation-delay: 300ms; }
+.delay-400 { animation-delay: 400ms; }
+.delay-500 { animation-delay: 500ms; }
+
+/* App Icon Hover Effect */
+.app-icon {
+  @apply transition-all duration-200 ease-out;
+}
+
+.app-icon:hover {
+  @apply scale-110;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
+}
+
+/* Input Styles */
+input[type="text"],
+input[type="search"],
+input[type="url"] {
+  @apply bg-transparent border-none focus:outline-none;
+}
+
+/* Modal Backdrop */
+.modal-backdrop {
+  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50;
+}
+
+/* Tooltip */
+.tooltip {
+  @apply absolute z-50 px-2 py-1 text-xs rounded bg-gray-900 text-white opacity-0 invisible transition-all duration-200;
+}
+
+.tooltip-trigger:hover .tooltip {
+  @apply opacity-100 visible;
+}

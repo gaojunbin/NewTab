@@ -1,12 +1,16 @@
+# NewTab 导航页 - 一键启动
+# 使用: docker compose up -d
 services:
   newtab:
     build:
       context: .
-      dockerfile: Dockerfile
+      dockerfile: docker/Dockerfile
     container_name: newtab
     restart: unless-stopped
-    volumes:
-      - ./:/var/www/html:Z
     ports:
-      - 8015:80
-    privileged: true
+      - "8015:80"
+    volumes:
+      - ./backend/data:/app/data
+    environment:
+      - NODE_ENV=production
+      - EDIT_PASSWORD=${EDIT_PASSWORD:-}
