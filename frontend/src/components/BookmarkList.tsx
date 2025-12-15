@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Pencil, Trash2, ExternalLink } from 'lucide-react';
+import { Plus, Pencil, Trash2, ExternalLink, Link as LinkIcon } from 'lucide-react';
 import { useAppStore } from '../stores/useAppStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import type { Bookmark, Link } from '../types';
@@ -14,111 +14,178 @@ function BookmarkList({ bookmarks }: BookmarkListProps) {
   const { isEditMode, settings } = useSettingsStore();
   const [editingLink, setEditingLink] = useState<{ categoryId: string; link?: Link } | null>(null);
   const [editingCategory, setEditingCategory] = useState<Bookmark | null>(null);
+  const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
   return (
-    <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-      {bookmarks.map((category, idx) => (
-        <motion.div
-          key={category.id}
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: idx * 0.03 }}
-          className="rounded-xl overflow-hidden backdrop-blur-[12px]"
-          style={{
-            background: settings.theme === 'dark' ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)',
-            border: `1px solid ${settings.theme === 'dark' ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.06)'}`,
-          }}
-        >
-          {/* Category Header */}
-          <div
-            className="flex items-center gap-2 px-3 py-2"
-            style={{ borderBottom: `1px solid ${settings.accentColor}20` }}
+    <div className="space-y-4">
+      {/* Bookmark Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        {bookmarks.map((category, idx) => (
+          <motion.div
+            key={category.id}
+            initial={{ opacity: 0, y: 20, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ delay: idx * 0.05, type: 'spring', stiffness: 200 }}
+            className="rounded-2xl p-5 transition-all duration-300 hover:shadow-lg"
+            style={{
+              background: `linear-gradient(135deg, ${settings.accentColor}10 0%, ${settings.accentColor}05 100%)`,
+              border: `1px solid ${settings.accentColor}20`,
+              boxShadow: `0 4px 20px -8px ${settings.accentColor}15`,
+            }}
           >
-            <h4 className="font-medium flex-1 text-sm" style={{ color: settings.textColor }}>{category.category}</h4>
-            {isEditMode && (
-              <div className="flex gap-1">
-                <button onClick={() => setEditingCategory(category)} className="p-1 rounded hover:opacity-70">
-                  <Pencil className="w-3 h-3" style={{ color: settings.accentColor }} />
-                </button>
-                <button onClick={() => { if (confirm('Delete?')) deleteBookmarkCategory(category.id); }} className="p-1 rounded hover:opacity-70">
-                  <Trash2 className="w-3 h-3 text-red-400" />
-                </button>
-              </div>
-            )}
-          </div>
-
-          {/* Links */}
-          <div className="p-2 space-y-1">
-            {category.links.map((link) => (
-              <LinkItem
-                key={link.id}
-                link={link}
-                isEditMode={isEditMode}
-                onEdit={() => setEditingLink({ categoryId: category.id, link })}
-                onDelete={() => deleteBookmark(category.id, link.id)}
-              />
-            ))}
-            {isEditMode && (
-              <button
-                onClick={() => setEditingLink({ categoryId: category.id })}
-                className="w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs transition-colors hover:opacity-70"
-                style={{ color: settings.accentColor }}
+            {/* Category Header */}
+            <div className="flex items-center gap-2 mb-4">
+              <div
+                className="w-8 h-8 rounded-lg flex items-center justify-center"
+                style={{
+                  background: `linear-gradient(135deg, ${settings.accentColor}25 0%, ${settings.accentColor}10 100%)`,
+                }}
               >
-                <Plus className="w-3 h-3" />Add Link
-              </button>
-            )}
-          </div>
-        </motion.div>
-      ))}
+                <LinkIcon className="w-4 h-4" style={{ color: settings.accentColor }} />
+              </div>
+              <h4
+                className="text-sm font-semibold flex-1"
+                style={{ color: settings.textColor }}
+              >
+                {category.category}
+              </h4>
+              {isEditMode && (
+                <div className="flex gap-1">
+                  <button
+                    onClick={() => setEditingCategory(category)}
+                    className="p-1.5 rounded-lg transition-colors hover:opacity-70"
+                    style={{ background: `${settings.accentColor}15` }}
+                  >
+                    <Pencil className="w-3 h-3" style={{ color: settings.accentColor }} />
+                  </button>
+                  <button
+                    onClick={() => { if (confirm('Delete category?')) deleteBookmarkCategory(category.id); }}
+                    className="p-1.5 rounded-lg transition-colors hover:opacity-70 bg-red-500/10"
+                  >
+                    <Trash2 className="w-3 h-3 text-red-400" />
+                  </button>
+                </div>
+              )}
+            </div>
 
-      {isEditMode && (
-        <button
-          onClick={() => setEditingCategory({ id: '', category: '', links: [] })}
-          className="rounded-xl p-4 flex flex-col items-center justify-center gap-2 border-2 border-dashed min-h-[100px] transition-all hover:opacity-70"
-          style={{ borderColor: settings.accentColor, color: settings.accentColor }}
-        >
-          <Plus className="w-5 h-5" />
-          <span className="text-sm">Add Category</span>
-        </button>
-      )}
+            {/* Links List */}
+            <div className="space-y-1.5">
+              {category.links.map((link, linkIdx) => (
+                <motion.div
+                  key={link.id}
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.05 + linkIdx * 0.02 }}
+                  onMouseEnter={() => setHoveredLink(link.id)}
+                  onMouseLeave={() => setHoveredLink(null)}
+                >
+                  {isEditMode ? (
+                    <div
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg"
+                      style={{
+                        background: `${settings.accentColor}10`,
+                      }}
+                    >
+                      <span className="text-sm flex-1 truncate" style={{ color: settings.textColor }}>{link.name}</span>
+                      <button
+                        onClick={() => setEditingLink({ categoryId: category.id, link })}
+                        className="p-1 rounded hover:opacity-70"
+                      >
+                        <Pencil className="w-3 h-3" style={{ color: settings.accentColor }} />
+                      </button>
+                      <button
+                        onClick={() => { if (confirm('Delete?')) deleteBookmark(category.id, link.id); }}
+                        className="p-1 rounded hover:opacity-70"
+                      >
+                        <Trash2 className="w-3 h-3 text-red-400" />
+                      </button>
+                    </div>
+                  ) : (
+                    <a
+                      href={link.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
+                      style={{
+                        background: hoveredLink === link.id ? `${settings.accentColor}15` : 'transparent',
+                      }}
+                    >
+                      <span
+                        className="text-sm flex-1 truncate transition-colors duration-200"
+                        style={{
+                          color: hoveredLink === link.id ? settings.textColor : settings.accentColor,
+                        }}
+                      >
+                        {link.name}
+                      </span>
+                      <ExternalLink
+                        className="w-3.5 h-3.5 flex-shrink-0 transition-all duration-200"
+                        style={{
+                          color: settings.accentColor,
+                          opacity: hoveredLink === link.id ? 0.8 : 0.3,
+                        }}
+                      />
+                    </a>
+                  )}
+                </motion.div>
+              ))}
 
-      <AnimatePresence>{editingLink && <LinkEditor categoryId={editingLink.categoryId} link={editingLink.link} onClose={() => setEditingLink(null)} />}</AnimatePresence>
-      <AnimatePresence>{editingCategory && <CategoryEditor category={editingCategory} onClose={() => setEditingCategory(null)} />}</AnimatePresence>
-    </div>
-  );
-}
+              {/* Add Link Button */}
+              {isEditMode && (
+                <motion.button
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  onClick={() => setEditingLink({ categoryId: category.id })}
+                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed transition-all duration-300 hover:opacity-80"
+                  style={{
+                    borderColor: settings.accentColor + '30',
+                    color: settings.accentColor,
+                  }}
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  <span className="text-xs">Add Link</span>
+                </motion.button>
+              )}
+            </div>
+          </motion.div>
+        ))}
 
-function LinkItem({ link, isEditMode, onEdit, onDelete }: { link: Link; isEditMode: boolean; onEdit: () => void; onDelete: () => void }) {
-  const { settings } = useSettingsStore();
-
-  if (isEditMode) {
-    return (
-      <div className="flex items-center gap-2 px-2 py-1.5 rounded" style={{ background: `${settings.accentColor}10` }}>
-        <span className="text-sm flex-1 truncate" style={{ color: settings.textColor }}>{link.name}</span>
-        <button onClick={onEdit} className="p-1 rounded hover:opacity-70"><Pencil className="w-3 h-3" style={{ color: settings.accentColor }} /></button>
-        <button onClick={() => { if (confirm('Delete?')) onDelete(); }} className="p-1 rounded hover:opacity-70"><Trash2 className="w-3 h-3 text-red-400" /></button>
+        {/* Add Category Card */}
+        {isEditMode && (
+          <motion.button
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            onClick={() => setEditingCategory({ id: '', category: '', links: [] })}
+            className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed transition-all duration-300 hover:scale-[1.02] min-h-[120px]"
+            style={{
+              borderColor: settings.accentColor + '30',
+              color: settings.accentColor,
+            }}
+          >
+            <Plus className="w-6 h-6" />
+            <span className="text-sm">New Category</span>
+          </motion.button>
+        )}
       </div>
-    );
-  }
 
-  return (
-    <a
-      href={link.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center gap-2 px-2 py-1.5 rounded transition-colors group"
-      style={{ color: settings.textColor }}
-    >
-      <span
-        className="text-sm flex-1 truncate transition-colors"
-        style={{ borderBottom: `1px solid transparent` }}
-        onMouseOver={(e) => (e.currentTarget.style.borderBottomColor = settings.accentColor)}
-        onMouseOut={(e) => (e.currentTarget.style.borderBottomColor = 'transparent')}
-      >
-        {link.name}
-      </span>
-      <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" style={{ color: settings.accentColor }} />
-    </a>
+      <AnimatePresence>
+        {editingLink && (
+          <LinkEditor
+            categoryId={editingLink.categoryId}
+            link={editingLink.link}
+            onClose={() => setEditingLink(null)}
+          />
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {editingCategory && (
+          <CategoryEditor
+            category={editingCategory}
+            onClose={() => setEditingCategory(null)}
+          />
+        )}
+      </AnimatePresence>
+    </div>
   );
 }
 
@@ -137,27 +204,77 @@ function LinkEditor({ categoryId, link, onClose }: { categoryId: string; link?: 
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <motion.div
-        initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
-        className="rounded-2xl p-6 w-full max-w-md"
-        style={{ background: settings.backgroundColor, border: `1px solid ${settings.accentColor}40` }}
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        className="rounded-3xl p-6 w-full max-w-md backdrop-blur-xl"
+        style={{
+          background: `linear-gradient(135deg, ${settings.backgroundColor}f0 0%, ${settings.backgroundColor}e0 100%)`,
+          border: `1px solid ${settings.accentColor}30`,
+          boxShadow: `0 25px 50px -12px ${settings.accentColor}20`,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-xl font-semibold mb-4" style={{ color: settings.textColor }}>{isNew ? 'Add Link' : 'Edit Link'}</h3>
+        <h3 className="text-xl font-semibold mb-6" style={{ color: settings.textColor }}>
+          {isNew ? 'New Link' : 'Edit Link'}
+        </h3>
         <div className="space-y-4">
           <div>
-            <label className="block text-sm mb-1" style={{ color: settings.accentColor }}>Name</label>
-            <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-transparent border focus:outline-none" style={{ borderColor: settings.accentColor, color: settings.textColor }} />
+            <label className="block text-sm mb-2" style={{ color: settings.accentColor }}>Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-transparent border focus:outline-none transition-colors"
+              style={{
+                borderColor: settings.accentColor + '40',
+                color: settings.textColor,
+              }}
+              placeholder="Link name"
+            />
           </div>
           <div>
-            <label className="block text-sm mb-1" style={{ color: settings.accentColor }}>URL</label>
-            <input type="text" value={url} onChange={(e) => setUrl(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-transparent border focus:outline-none" style={{ borderColor: settings.accentColor, color: settings.textColor }} />
+            <label className="block text-sm mb-2" style={{ color: settings.accentColor }}>URL</label>
+            <input
+              type="text"
+              value={url}
+              onChange={(e) => setUrl(e.target.value)}
+              className="w-full px-4 py-3 rounded-xl bg-transparent border focus:outline-none transition-colors"
+              style={{
+                borderColor: settings.accentColor + '40',
+                color: settings.textColor,
+              }}
+              placeholder="https://..."
+            />
           </div>
         </div>
         <div className="flex justify-end gap-3 mt-6">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg" style={{ color: settings.accentColor }}>Cancel</button>
-          <button onClick={handleSave} disabled={!name.trim() || !url.trim()} className="px-4 py-2 rounded-lg disabled:opacity-50" style={{ background: settings.accentColor, color: settings.backgroundColor }}>Save</button>
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl transition-colors hover:opacity-70"
+            style={{ color: settings.accentColor }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!name.trim() || !url.trim()}
+            className="px-5 py-2.5 rounded-xl font-medium transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            style={{
+              background: `linear-gradient(135deg, ${settings.accentColor} 0%, ${settings.accentColor}cc 100%)`,
+              color: settings.backgroundColor,
+            }}
+          >
+            Save
+          </button>
         </div>
       </motion.div>
     </motion.div>
@@ -178,21 +295,61 @@ function CategoryEditor({ category, onClose }: { category: Bookmark; onClose: ()
   };
 
   return (
-    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={onClose}>
+    <motion.div
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+      className="fixed inset-0 bg-black/60 backdrop-blur-md z-50 flex items-center justify-center p-4"
+      onClick={onClose}
+    >
       <motion.div
-        initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
-        className="rounded-2xl p-6 w-full max-w-md"
-        style={{ background: settings.backgroundColor, border: `1px solid ${settings.accentColor}40` }}
+        initial={{ scale: 0.9, y: 20 }}
+        animate={{ scale: 1, y: 0 }}
+        exit={{ scale: 0.9, y: 20 }}
+        className="rounded-3xl p-6 w-full max-w-md backdrop-blur-xl"
+        style={{
+          background: `linear-gradient(135deg, ${settings.backgroundColor}f0 0%, ${settings.backgroundColor}e0 100%)`,
+          border: `1px solid ${settings.accentColor}30`,
+          boxShadow: `0 25px 50px -12px ${settings.accentColor}20`,
+        }}
         onClick={(e) => e.stopPropagation()}
       >
-        <h3 className="text-xl font-semibold mb-4" style={{ color: settings.textColor }}>{isNew ? 'Add Category' : 'Edit Category'}</h3>
+        <h3 className="text-xl font-semibold mb-6" style={{ color: settings.textColor }}>
+          {isNew ? 'New Category' : 'Edit Category'}
+        </h3>
         <div>
-          <label className="block text-sm mb-1" style={{ color: settings.accentColor }}>Name</label>
-          <input type="text" value={name} onChange={(e) => setName(e.target.value)} className="w-full px-4 py-2 rounded-lg bg-transparent border focus:outline-none" style={{ borderColor: settings.accentColor, color: settings.textColor }} />
+          <label className="block text-sm mb-2" style={{ color: settings.accentColor }}>Name</label>
+          <input
+            type="text"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full px-4 py-3 rounded-xl bg-transparent border focus:outline-none transition-colors"
+            style={{
+              borderColor: settings.accentColor + '40',
+              color: settings.textColor,
+            }}
+            placeholder="Category name"
+          />
         </div>
         <div className="flex justify-end gap-3 mt-6">
-          <button onClick={onClose} className="px-4 py-2 rounded-lg" style={{ color: settings.accentColor }}>Cancel</button>
-          <button onClick={handleSave} disabled={!name.trim()} className="px-4 py-2 rounded-lg disabled:opacity-50" style={{ background: settings.accentColor, color: settings.backgroundColor }}>Save</button>
+          <button
+            onClick={onClose}
+            className="px-5 py-2.5 rounded-xl transition-colors hover:opacity-70"
+            style={{ color: settings.accentColor }}
+          >
+            Cancel
+          </button>
+          <button
+            onClick={handleSave}
+            disabled={!name.trim()}
+            className="px-5 py-2.5 rounded-xl font-medium transition-all hover:scale-105 disabled:opacity-50 disabled:hover:scale-100"
+            style={{
+              background: `linear-gradient(135deg, ${settings.accentColor} 0%, ${settings.accentColor}cc 100%)`,
+              color: settings.backgroundColor,
+            }}
+          >
+            Save
+          </button>
         </div>
       </motion.div>
     </motion.div>

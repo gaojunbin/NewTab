@@ -46,32 +46,24 @@ function App() {
     })).filter(category => category.links.length > 0);
   }, [bookmarks, filterQuery]);
 
-  // CSS variables based on settings
-  const cssVars = {
-    '--color-background': settings.backgroundColor,
-    '--color-text-pri': settings.textColor,
-    '--color-text-acc': settings.accentColor,
-  } as React.CSSProperties;
-
   return (
     <div
       className="min-h-screen w-full"
       style={{
-        ...cssVars,
         backgroundColor: settings.backgroundColor,
         color: settings.textColor,
       }}
     >
-      {/* Main Container - matching original layout */}
-      <main className="max-w-[60%] mx-auto px-4 py-8 min-w-[800px]">
+      {/* Main Container */}
+      <main className="max-w-5xl mx-auto px-6 py-10">
 
-        {/* Search Section - at top like original */}
+        {/* Search Section */}
         {settings.showSearch && (
           <motion.section
             initial={{ opacity: 0, y: -20 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.4 }}
-            className="mb-8"
+            transition={{ duration: 0.5 }}
+            className="mb-10"
           >
             <SearchBar onFilterChange={setFilterQuery} />
           </motion.section>
@@ -81,19 +73,19 @@ function App() {
         <motion.section
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.1 }}
-          className="text-center mb-6"
+          transition={{ duration: 0.6, delay: 0.1 }}
+          className="text-center mb-8"
         >
           {settings.showClock && <Clock />}
         </motion.section>
 
-        {/* Weather - below clock, smaller */}
+        {/* Weather */}
         {settings.showWeather && (
           <motion.section
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             transition={{ duration: 0.5, delay: 0.15 }}
-            className="flex justify-center mb-8"
+            className="flex justify-center mb-12"
           >
             <Weather />
           </motion.section>
@@ -102,69 +94,67 @@ function App() {
         {/* Filter indicator */}
         {filterQuery && (
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="mb-4 text-center"
-            style={{ color: settings.accentColor }}
+            initial={{ opacity: 0, y: -10 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="mb-6 text-center"
           >
-            Filtering: "{filterQuery}" - Found {filteredAppGroups.reduce((acc, g) => acc + g.apps.length, 0)} apps, {filteredBookmarks.reduce((acc, b) => acc + b.links.length, 0)} bookmarks
+            <span
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm"
+              style={{
+                background: `${settings.accentColor}15`,
+                border: `1px solid ${settings.accentColor}30`,
+                color: settings.accentColor,
+              }}
+            >
+              Filtering: "{filterQuery}"
+              <span style={{ color: settings.textColor }}>
+                {filteredAppGroups.reduce((acc, g) => acc + g.apps.length, 0)} apps,{' '}
+                {filteredBookmarks.reduce((acc, b) => acc + b.links.length, 0)} bookmarks
+              </span>
+            </span>
           </motion.div>
         )}
 
         {/* Applications Section */}
         <motion.section
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.2 }}
-          className="mb-10"
+          transition={{ duration: 0.5, delay: 0.2 }}
+          className="mb-16"
         >
-          <h3
-            className="text-lg font-light mb-6 pb-2 border-b"
-            style={{
-              color: settings.textColor,
-              borderColor: `${settings.accentColor}40`
-            }}
-          >
-            Applications
-          </h3>
           <AppGrid appGroups={filteredAppGroups} />
         </motion.section>
 
         {/* Bookmarks Section */}
         <motion.section
-          initial={{ opacity: 0, y: 20 }}
+          initial={{ opacity: 0, y: 30 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.3 }}
-          className="mb-10"
+          transition={{ duration: 0.5, delay: 0.3 }}
+          className="mb-16"
         >
-          <h3
-            className="text-lg font-light mb-6 pb-2 border-b"
-            style={{
-              color: settings.textColor,
-              borderColor: `${settings.accentColor}40`
-            }}
-          >
-            Bookmarks
-          </h3>
           <BookmarkList bookmarks={filteredBookmarks} />
         </motion.section>
 
         {/* Footer */}
-        <footer
-          className="text-center py-6 text-sm"
-          style={{ color: settings.accentColor }}
+        <motion.footer
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          className="text-center py-8"
         >
-          <p>
-            Click <a
+          <p className="text-sm" style={{ color: settings.accentColor + '80' }}>
+            <a
               href="https://github.com/gaojunbin/NewTab"
               target="_blank"
               rel="noopener noreferrer"
-              className="underline hover:opacity-80"
+              className="hover:opacity-70 transition-opacity"
               style={{ color: settings.accentColor }}
-            >here</a> to see more details on GitHub project page.
+            >
+              NewTab
+            </a>
+            {' '}· Built with React · © 2024
           </p>
-          <p className="mt-1">CopyRight © 2024 Junbin Gao All Rights Reserved.</p>
-        </footer>
+        </motion.footer>
       </main>
 
       {/* Edit Mode Toggle & Settings */}
