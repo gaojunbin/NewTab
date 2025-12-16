@@ -4,6 +4,13 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 
 const greetings = ['Good Night', 'Good Morning', 'Good Afternoon', 'Good Evening'];
 
+const timezones = [
+  { label: 'Beijing', timezone: 'Asia/Shanghai' },
+  { label: 'Singapore', timezone: 'Asia/Singapore' },
+  { label: 'New York', timezone: 'America/New_York' },
+  { label: 'London', timezone: 'Europe/London' },
+];
+
 function Clock() {
   const { settings } = useSettingsStore();
   const [time, setTime] = useState(new Date());
@@ -14,18 +21,21 @@ function Clock() {
   }, []);
 
   const formatTime = (date: Date) => {
-    const options: Intl.DateTimeFormatOptions = {
-      hour: '2-digit',
-      minute: '2-digit',
-      hour12: settings.clockFormat === '12h',
-    };
-    return date.toLocaleTimeString('en-US', options);
+    const hours = settings.clockFormat === '12h'
+      ? date.getHours() % 12 || 12
+      : date.getHours();
+    const minutes = date.getMinutes().toString().padStart(2, '0');
+    return `${hours}:${minutes}`;
+  };
+
+  const getAmPm = () => {
+    if (settings.clockFormat !== '12h') return null;
+    return time.getHours() >= 12 ? 'PM' : 'AM';
   };
 
   const formatDate = (date: Date) => {
     return date.toLocaleDateString('en-US', {
       weekday: 'long',
-      year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
@@ -44,48 +54,63 @@ function Clock() {
       animate={{ opacity: 1 }}
       className="text-center"
     >
-      {/* Time - Large like original */}
-      <div className="flex items-baseline gap-2 justify-center">
-        <h1
-          className="text-5xl md:text-6xl font-extralight tracking-tight tabular-nums"
-          style={{ color: settings.textColor, textShadow: '0 2px 10px rgba(0,0,0,0.2)' }}
-        >
-          {formatTime(time)}
-        </h1>
-        {settings.clockShowSeconds && (
-          <span
-            className="text-2xl font-light tabular-nums"
-            style={{ color: settings.accentColor }}
-          >
-            {time.getSeconds().toString().padStart(2, '0')}
-          </span>
-        )}
-      </div>
-
       {/* Greeting */}
-      {settings.showGreeting && (
-        <h2
-          className="text-xl font-light mt-2"
-          style={{ color: settings.accentColor }}
-        >
-          {getGreeting()}
-        </h2>
+      <h2
+        className="text-2xl md:text-3xl font-medium tracking-tight mb-4"
+        style={{ color: settings.textColor }}
+      >
+        {getGreeting()}
+      </h2>
+
+      {/* Time */}
+      {settings.showClock && (
+        <div className="flex items-baseline justify-center gap-2 mb-2">
+          <h1
+            className="text-6xl md:text-7xl font-thin tracking-tighter tabular-nums"
+            style={{ color: settings.textColor }}
+          >
+            {formatTime(time)}
+          </h1>
+          {settings.clockShowSeconds && (
+            <span
+              className="text-2xl md:text-3xl font-thin tabular-nums"
+              style={{ color: settings.accentColor }}
+            >
+              {time.getSeconds().toString().padStart(2, '0')}
+            </span>
+          )}
+          {getAmPm() && (
+            <span
+              className="text-lg font-light ml-1"
+              style={{ color: settings.accentColor }}
+            >
+              {getAmPm()}
+            </span>
+          )}
+        </div>
       )}
 
       {/* Date */}
-      <p
-        className="text-sm mt-2"
-        style={{ color: settings.accentColor }}
-      >
-        {formatDate(time)}
-      </p>
+      {settings.showClock && (
+        <p
+          className="text-sm font-normal tracking-wide"
+          style={{ color: settings.accentColor }}
+        >
+          {formatDate(time)}
+        </p>
+      )}
 
       {/* Multi-timezone */}
-      <div className="flex gap-4 mt-3 text-xs justify-center" style={{ color: settings.accentColor }}>
-        <TimeZoneDisplay label="Beijing" timezone="Asia/Shanghai" />
-        <TimeZoneDisplay label="Singapore" timezone="Asia/Singapore" />
-        <TimeZoneDisplay label="New York" timezone="America/New_York" />
-      </div>
+      {settings.showClock && settings.showMultiTimezone && (
+        <div
+          className="flex gap-4 mt-4 text-xs justify-center flex-wrap"
+          style={{ color: settings.accentColor }}
+        >
+          {timezones.map((tz) => (
+            <TimeZoneDisplay key={tz.timezone} label={tz.label} timezone={tz.timezone} />
+          ))}
+        </div>
+      )}
     </motion.div>
   );
 }
@@ -112,9 +137,9 @@ function TimeZoneDisplay({ label, timezone }: { label: string; timezone: string 
   }, [timezone]);
 
   return (
-    <span className="flex items-center gap-1">
+    <span className="flex items-center gap-1.5">
       <span style={{ color: settings.accentColor }}>{label}</span>
-      <span className="tabular-nums" style={{ color: settings.textColor }}>{time}</span>
+      <span className="tabular-nums font-medium" style={{ color: settings.textColor }}>{time}</span>
     </span>
   );
 }

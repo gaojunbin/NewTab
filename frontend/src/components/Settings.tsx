@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Palette, Clock, CloudSun, Search, Download, Upload, RotateCcw, Sun, Moon, Monitor } from 'lucide-react';
+import { X, Palette, Settings as SettingsIcon, CloudSun, Search, Download, Upload, RotateCcw, Sun, Moon, Monitor, User, Clock } from 'lucide-react';
 import { useSettingsStore, themePresets } from '../stores/useSettingsStore';
 
 type TabType = 'appearance' | 'features' | 'backup';
@@ -18,7 +18,7 @@ function Settings() {
 
   const tabs = [
     { id: 'appearance' as TabType, label: '外观', icon: Palette },
-    { id: 'features' as TabType, label: '功能', icon: Clock },
+    { id: 'features' as TabType, label: '功能', icon: SettingsIcon },
     { id: 'backup' as TabType, label: '备份', icon: Download },
   ];
 
@@ -116,7 +116,12 @@ function FeaturesSettings({ settings, setSettings }: { settings: any; setSetting
   return (
     <div className="space-y-6">
       <div className="space-y-3">
-        {[{ key: 'showClock', label: '显示时钟', icon: Clock }, { key: 'showWeather', label: '显示天气', icon: CloudSun }, { key: 'showSearch', label: '显示搜索框', icon: Search }, { key: 'showGreeting', label: '显示问候语', icon: Sun, hasInput: true }].map((feature) => (
+        {[
+          { key: 'showGreeting', label: '显示问候语', icon: User },
+          { key: 'showClock', label: '显示时钟', icon: Clock },
+          { key: 'showWeather', label: '显示天气', icon: CloudSun },
+          { key: 'showSearch', label: '显示搜索框', icon: Search },
+        ].map((feature) => (
           <div key={feature.key} className="flex items-center justify-between p-3 rounded-lg" style={{ background: `${settings.accentColor}10` }}>
             <div className="flex items-center gap-3">
               <feature.icon className="w-5 h-5" style={{ color: settings.accentColor }} />
@@ -183,6 +188,16 @@ function FeaturesSettings({ settings, setSettings }: { settings: any; setSetting
               }}
             >
               显示秒
+            </button>
+            <button
+              onClick={() => setSettings({ showMultiTimezone: !settings.showMultiTimezone })}
+              className="px-4 py-2 rounded-lg transition-colors"
+              style={{
+                background: settings.showMultiTimezone ? settings.accentColor : `${settings.accentColor}20`,
+                color: settings.showMultiTimezone ? settings.backgroundColor : settings.textColor,
+              }}
+            >
+              多时区
             </button>
           </div>
         </div>

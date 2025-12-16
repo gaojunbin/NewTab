@@ -1,5 +1,6 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
+import { ChevronDown, Search, X } from 'lucide-react';
 import { useSettingsStore } from './stores/useSettingsStore';
 import { useAppStore } from './stores/useAppStore';
 import Clock from './components/Clock';
@@ -14,6 +15,9 @@ function App() {
   const { settings } = useSettingsStore();
   const { appGroups, bookmarks, fetchApps, fetchBookmarks, fetchProviders } = useAppStore();
   const [filterQuery, setFilterQuery] = useState('');
+  const [isFilterMode, setIsFilterMode] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
+  const filterInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchApps();
@@ -46,116 +50,200 @@ function App() {
     })).filter(category => category.links.length > 0);
   }, [bookmarks, filterQuery]);
 
+  const scrollToContent = () => {
+    contentRef.current?.scrollIntoView({ behavior: 'smooth' });
+  };
+
+  // Handle filter mode change from SearchBar
+  const handleFilterModeChange = useCallback((active: boolean, query: string) => {
+    setIsFilterMode(active);
+    setFilterQuery(query);
+    if (active) {
+      // Scroll to content section when entering filter mode
+      setTimeout(() => {
+        contentRef.current?.scrollIntoView({ behavior: 'smooth' });
+        // Focus the filter input after scroll
+        setTimeout(() => filterInputRef.current?.focus(), 300);
+      }, 100);
+    }
+  }, []);
+
+  // Handle filter query change (for mini search bar)
+  const handleFilterQueryChange = (query: string) => {
+    setFilterQuery(query);
+  };
+
+  // Exit filter mode
+  const exitFilterMode = () => {
+    setIsFilterMode(false);
+    setFilterQuery('');
+  };
+
   return (
     <div
-      className="min-h-screen w-full"
+      className="w-full h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth"
       style={{
         backgroundColor: settings.backgroundColor,
         color: settings.textColor,
       }}
     >
-      {/* Main Container */}
-      <main className="max-w-5xl mx-auto px-6 py-10">
+      {/* Hero Section - Full Screen */}
+      <section className="min-h-screen h-screen flex flex-col relative snap-start snap-always">
+        {/* Main Content - Centered */}
+        <div className="flex-1 flex flex-col items-center justify-center px-6">
+          {/* Greeting */}
+          {settings.showGreeting && (
+            <motion.div
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="text-center mb-8"
+            >
+              <Clock />
+            </motion.div>
+          )}
 
-        {/* Search Section */}
-        {settings.showSearch && (
+          {/* Weather */}
+          {settings.showWeather && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+              className="mb-10"
+            >
+              <Weather />
+            </motion.div>
+          )}
+
+          {/* Search Bar */}
+          {settings.showSearch && (
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.3 }}
+              className="w-full max-w-2xl"
+            >
+              <SearchBar
+                onFilterChange={setFilterQuery}
+                onFilterModeChange={handleFilterModeChange}
+              />
+            </motion.div>
+          )}
+        </div>
+
+        {/* Bottom Area - Scroll Indicator */}
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.6 }}
+          className="pb-10 flex flex-col items-center"
+        >
+          <button
+            onClick={scrollToContent}
+            className="flex flex-col items-center gap-1 transition-opacity hover:opacity-70"
+            style={{ color: settings.accentColor + '80' }}
+          >
+            <motion.div
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+            >
+              <ChevronDown className="w-5 h-5" />
+            </motion.div>
+          </button>
+        </motion.div>
+      </section>
+
+      {/* Content Section - Apps & Bookmarks */}
+      <section
+        ref={contentRef}
+        className="min-h-screen px-6 py-8 snap-start"
+      >
+        <div className="max-w-5xl mx-auto">
+          {/* Mini Filter Search Bar */}
+          {isFilterMode && (
+            <motion.div
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="mb-6 flex justify-center"
+            >
+              <div
+                className="flex items-center gap-3 px-4 py-3 rounded-xl max-w-md w-full"
+                style={{
+                  background: `${settings.accentColor}10`,
+                  border: `1px solid ${settings.accentColor}30`,
+                }}
+              >
+                <Search className="w-4 h-4" style={{ color: settings.accentColor }} />
+                <input
+                  ref={filterInputRef}
+                  type="text"
+                  value={filterQuery}
+                  onChange={(e) => handleFilterQueryChange(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Escape' && exitFilterMode()}
+                  className="flex-1 bg-transparent text-sm focus:outline-none"
+                  style={{ color: settings.textColor }}
+                  placeholder="Filter apps and bookmarks..."
+                  autoFocus
+                />
+                <span className="text-xs" style={{ color: settings.accentColor }}>
+                  {filteredAppGroups.reduce((acc, g) => acc + g.apps.length, 0)} + {filteredBookmarks.reduce((acc, b) => acc + b.links.length, 0)}
+                </span>
+                <button
+                  onClick={exitFilterMode}
+                  className="p-1 rounded hover:opacity-70"
+                >
+                  <X className="w-4 h-4" style={{ color: settings.accentColor }} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+
+          {/* Applications Section */}
           <motion.section
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
             transition={{ duration: 0.5 }}
-            className="mb-10"
+            className="mb-16"
           >
-            <SearchBar onFilterChange={setFilterQuery} />
+            <AppGrid appGroups={filteredAppGroups} />
           </motion.section>
-        )}
 
-        {/* Header Section - Time, Greeting centered */}
-        <motion.section
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.6, delay: 0.1 }}
-          className="text-center mb-8"
-        >
-          {settings.showClock && <Clock />}
-        </motion.section>
-
-        {/* Weather */}
-        {settings.showWeather && (
+          {/* Bookmarks Section */}
           <motion.section
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.15 }}
-            className="flex justify-center mb-12"
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="mb-16"
           >
-            <Weather />
+            <BookmarkList bookmarks={filteredBookmarks} />
           </motion.section>
-        )}
 
-        {/* Filter indicator */}
-        {filterQuery && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="mb-6 text-center"
+          {/* Footer */}
+          <motion.footer
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+            className="text-center py-8"
           >
-            <span
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-sm"
-              style={{
-                background: `${settings.accentColor}15`,
-                border: `1px solid ${settings.accentColor}30`,
-                color: settings.accentColor,
-              }}
-            >
-              Filtering: "{filterQuery}"
-              <span style={{ color: settings.textColor }}>
-                {filteredAppGroups.reduce((acc, g) => acc + g.apps.length, 0)} apps,{' '}
-                {filteredBookmarks.reduce((acc, b) => acc + b.links.length, 0)} bookmarks
-              </span>
-            </span>
-          </motion.div>
-        )}
-
-        {/* Applications Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.2 }}
-          className="mb-16"
-        >
-          <AppGrid appGroups={filteredAppGroups} />
-        </motion.section>
-
-        {/* Bookmarks Section */}
-        <motion.section
-          initial={{ opacity: 0, y: 30 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="mb-16"
-        >
-          <BookmarkList bookmarks={filteredBookmarks} />
-        </motion.section>
-
-        {/* Footer */}
-        <motion.footer
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="text-center py-8"
-        >
-          <p className="text-sm" style={{ color: settings.accentColor + '80' }}>
-            <a
-              href="https://github.com/gaojunbin/NewTab"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="hover:opacity-70 transition-opacity"
-              style={{ color: settings.accentColor }}
-            >
-              NewTab
-            </a>
-            {' '}· Built with React · © 2024
-          </p>
-        </motion.footer>
-      </main>
+            <p className="text-sm" style={{ color: settings.accentColor + '60' }}>
+              © 2025{' '}
+              <a
+                href="https://github.com/gaojunbin/NewTab"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="hover:opacity-70 transition-opacity"
+                style={{ color: settings.accentColor }}
+              >
+                NewTab
+              </a>
+              {' '}· All rights reserved
+            </p>
+          </motion.footer>
+        </div>
+      </section>
 
       {/* Edit Mode Toggle & Settings */}
       <EditModeToggle />

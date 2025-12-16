@@ -30,6 +30,7 @@ const defaultSettings: Settings = {
   showSearch: true,
   clockFormat: '24h',
   clockShowSeconds: true,
+  showMultiTimezone: false,
   weatherCity: 'Singapore',
   defaultSearchEngine: 'google',
   searchHistory: [],

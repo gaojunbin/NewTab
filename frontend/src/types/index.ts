@@ -65,6 +65,7 @@ export interface Settings {
   showSearch: boolean;
   clockFormat: '12h' | '24h';
   clockShowSeconds: boolean;
+  showMultiTimezone: boolean;
   weatherCity: string;
   defaultSearchEngine: string;
   searchHistory: string[];

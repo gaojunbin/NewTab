@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Clock, ArrowRight, Filter, ChevronDown, Trash2 } from 'lucide-react';
+import { Search, X, Clock, ArrowRight, ChevronDown, Trash2 } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { useAppStore } from '../stores/useAppStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
@@ -16,10 +16,11 @@ const engineIcons: Record<string, string> = Object.fromEntries(searchEngines.map
 const searchUrls: Record<string, string> = Object.fromEntries(searchEngines.map(e => [e.id, e.url]));
 
 interface SearchBarProps {
-  onFilterChange?: (query: string) => void;
+  onFilterChange?: (query: string) => void;  // Kept for compatibility
+  onFilterModeChange?: (active: boolean, query: string) => void;
 }
 
-function SearchBar({ onFilterChange }: SearchBarProps) {
+function SearchBar({ onFilterModeChange }: SearchBarProps) {
   const { providers } = useAppStore();
   const { settings, addSearchHistory, removeSearchHistory, clearSearchHistory } = useSettingsStore();
   const [query, setQuery] = useState('');
@@ -28,7 +29,6 @@ function SearchBar({ onFilterChange }: SearchBarProps) {
   const [showEngineDropdown, setShowEngineDropdown] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [isFilterMode, setIsFilterMode] = useState(false);
   const [hoveredEngine, setHoveredEngine] = useState<string | null>(null);
   const [hoveredHistory, setHoveredHistory] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -37,19 +37,15 @@ function SearchBar({ onFilterChange }: SearchBarProps) {
 
   // Handle prefix commands
   useEffect(() => {
-    // Skip if already in filter mode
-    if (isFilterMode) return;
-
     if (query.startsWith('/')) {
       const parts = query.split(' ');
       const prefix = parts[0];
 
       // Check for filter mode - need space after /f or /filter
       if ((prefix === '/f' || prefix === '/filter') && parts.length > 1) {
-        setIsFilterMode(true);
         const filterQuery = parts.slice(1).join(' ');
-        setQuery(filterQuery);
-        onFilterChange?.(filterQuery);
+        setQuery(''); // Clear the main search bar
+        onFilterModeChange?.(true, filterQuery);
         return;
       }
 
@@ -59,18 +55,10 @@ function SearchBar({ onFilterChange }: SearchBarProps) {
         setQuery(parts.slice(1).join(' '));
       }
     }
-  }, [query, providers, isFilterMode, onFilterChange]);
-
-  // Update filter when query changes in filter mode
-  useEffect(() => {
-    if (isFilterMode) {
-      onFilterChange?.(query);
-    }
-  }, [query, isFilterMode, onFilterChange]);
+  }, [query, providers, onFilterModeChange]);
 
   // Fetch suggestions
   useEffect(() => {
-    if (isFilterMode) return;
 
     const fetchSuggestions = async () => {
       if (query.length < 2 || query.startsWith('/')) {
@@ -87,12 +75,11 @@ function SearchBar({ onFilterChange }: SearchBarProps) {
 
     const debounce = setTimeout(fetchSuggestions, 300);
     return () => clearTimeout(debounce);
-  }, [query, activeEngine, isFilterMode]);
+  }, [query, activeEngine]);
 
   const handleSearch = useCallback(
     (searchQuery: string = query) => {
       if (!searchQuery.trim()) return;
-      if (isFilterMode) return;
 
       const url = searchUrls[activeEngine] || searchUrls.google;
       addSearchHistory(searchQuery);
@@ -100,19 +87,10 @@ function SearchBar({ onFilterChange }: SearchBarProps) {
       setQuery('');
       setShowSuggestions(false);
     },
-    [query, activeEngine, addSearchHistory, isFilterMode]
+    [query, activeEngine, addSearchHistory]
   );
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    if (isFilterMode) {
-      if (e.key === 'Escape') {
-        setQuery('');
-        setIsFilterMode(false);
-        onFilterChange?.('');
-      }
-      return;
-    }
-
     const totalItems = suggestions.length + settings.searchHistory.filter(h => h.includes(query)).slice(0, 3).length;
 
     switch (e.key) {
@@ -191,25 +169,15 @@ function SearchBar({ onFilterChange }: SearchBarProps) {
         }}
       >
         <div className="flex items-center px-6 py-4">
-          {/* Filter/Search Mode Indicator */}
-          {isFilterMode ? (
-            <div
-              className="flex items-center gap-2 px-3 py-1.5 rounded-lg mr-2"
-              style={{ backgroundColor: `${settings.accentColor}30` }}
-            >
-              <Filter className="w-4 h-4" style={{ color: settings.accentColor }} />
-              <span className="text-sm" style={{ color: settings.accentColor }}>Filter</span>
-            </div>
-          ) : (
-            <button
-              onClick={() => setShowEngineDropdown(!showEngineDropdown)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity mr-2"
-              style={{ backgroundColor: `${settings.accentColor}20` }}
-            >
-              <Icon icon={engineIcons[activeEngine] || 'mdi:search'} className="w-6 h-6" />
-              <ChevronDown className="w-3 h-3" style={{ color: settings.accentColor }} />
-            </button>
-          )}
+          {/* Search Engine Selector */}
+          <button
+            onClick={() => setShowEngineDropdown(!showEngineDropdown)}
+            className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity mr-2"
+            style={{ backgroundColor: `${settings.accentColor}20` }}
+          >
+            <Icon icon={engineIcons[activeEngine] || 'mdi:search'} className="w-6 h-6" />
+            <ChevronDown className="w-3 h-3" style={{ color: settings.accentColor }} />
+          </button>
 
           {/* Input */}
           <input
@@ -223,43 +191,34 @@ function SearchBar({ onFilterChange }: SearchBarProps) {
             }}
             onFocus={() => setShowSuggestions(true)}
             onKeyDown={handleKeyDown}
-            placeholder={isFilterMode
-              ? "Type to filter apps and bookmarks... (Esc to exit)"
-              : `Search in ${searchEngines.find(e => e.id === activeEngine)?.name || 'Google'}`}
+            placeholder={`Search in ${searchEngines.find(e => e.id === activeEngine)?.name || 'Google'} · /f to filter`}
             className="flex-1 bg-transparent text-xl focus:outline-none"
             style={{ color: settings.textColor }}
+            autoFocus
           />
 
           {/* Clear / Search Button */}
           {query && (
             <button
-              onClick={() => {
-                setQuery('');
-                if (isFilterMode) {
-                  setIsFilterMode(false);
-                  onFilterChange?.('');
-                }
-              }}
+              onClick={() => setQuery('')}
               className="p-2 rounded-lg transition-colors hover:opacity-70"
             >
               <X className="w-6 h-6" style={{ color: settings.accentColor }} />
             </button>
           )}
-          {!isFilterMode && (
-            <button
-              onClick={() => handleSearch()}
-              className="p-2 ml-1 rounded-lg transition-colors"
-              style={{ backgroundColor: `${settings.accentColor}20` }}
-            >
-              <Search className="w-6 h-6" style={{ color: settings.textColor }} />
-            </button>
-          )}
+          <button
+            onClick={() => handleSearch()}
+            className="p-2 ml-1 rounded-lg transition-colors"
+            style={{ backgroundColor: `${settings.accentColor}20` }}
+          >
+            <Search className="w-6 h-6" style={{ color: settings.textColor }} />
+          </button>
         </div>
       </div>
 
       {/* Engine Dropdown - Outside search box to avoid overflow clipping */}
       <AnimatePresence>
-        {showEngineDropdown && !isFilterMode && (
+        {showEngineDropdown && (
           <motion.div
             ref={engineDropdownRef}
             initial={{ opacity: 0, y: -5 }}
@@ -303,7 +262,7 @@ function SearchBar({ onFilterChange }: SearchBarProps) {
 
       {/* Suggestions Dropdown */}
       <AnimatePresence>
-        {showSuggestions && !isFilterMode && (query || historyMatches.length > 0) && (
+        {showSuggestions && (query || historyMatches.length > 0) && (
           <motion.div
             initial={{ opacity: 0, y: -10 }}
             animate={{ opacity: 1, y: 0 }}
