@@ -7,13 +7,14 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { searchApi } from '../services/api';
 
 const searchEngines = [
-  { id: 'google', name: 'Google', icon: 'logos:google-icon', url: 'https://www.google.com/search?q=' },
-  { id: 'github', name: 'GitHub', icon: 'mdi:github', url: 'https://github.com/search?q=' },
-  { id: 'youtube', name: 'YouTube', icon: 'logos:youtube-icon', url: 'https://www.youtube.com/results?search_query=' },
+  { id: 'google', name: 'Google', icon: 'logos:google-icon', url: 'https://www.google.com/search?q=', home: 'https://www.google.com' },
+  { id: 'github', name: 'GitHub', icon: 'mdi:github', url: 'https://github.com/search?q=', home: 'https://github.com' },
+  { id: 'youtube', name: 'YouTube', icon: 'logos:youtube-icon', url: 'https://www.youtube.com/results?search_query=', home: 'https://www.youtube.com' },
 ];
 
 const engineIcons: Record<string, string> = Object.fromEntries(searchEngines.map(e => [e.id, e.icon]));
 const searchUrls: Record<string, string> = Object.fromEntries(searchEngines.map(e => [e.id, e.url]));
+const homeUrls: Record<string, string> = Object.fromEntries(searchEngines.map(e => [e.id, e.home]));
 
 interface SearchBarProps {
   onFilterChange?: (query: string) => void;  // Kept for compatibility
@@ -79,7 +80,12 @@ function SearchBar({ onFilterModeChange }: SearchBarProps) {
 
   const handleSearch = useCallback(
     (searchQuery: string = query) => {
-      if (!searchQuery.trim()) return;
+      // If empty query, open homepage
+      if (!searchQuery.trim()) {
+        const homeUrl = homeUrls[activeEngine] || homeUrls.google;
+        window.open(homeUrl, '_blank');
+        return;
+      }
 
       const url = searchUrls[activeEngine] || searchUrls.google;
       addSearchHistory(searchQuery);
