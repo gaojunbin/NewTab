@@ -174,7 +174,7 @@ function SearchBar({ onFilterModeChange }: SearchBarProps) {
           border: `1px solid ${settings.theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)'}`,
         }}
       >
-        <div className="flex items-center px-6 py-4">
+        <div className="flex items-center px-4 py-3 sm:px-6 sm:py-4">
           {/* Search Engine Selector */}
           <button
             onClick={() => setShowEngineDropdown(!showEngineDropdown)}
@@ -197,8 +197,8 @@ function SearchBar({ onFilterModeChange }: SearchBarProps) {
             }}
             onFocus={() => setShowSuggestions(true)}
             onKeyDown={handleKeyDown}
-            placeholder={`Search in ${searchEngines.find(e => e.id === activeEngine)?.name || 'Google'} · /f to filter`}
-            className="flex-1 bg-transparent text-xl focus:outline-none"
+            placeholder={`Search in ${searchEngines.find(e => e.id === activeEngine)?.name || 'Google'}`}
+            className="flex-1 bg-transparent text-base sm:text-xl focus:outline-none"
             style={{ color: settings.textColor }}
             autoFocus
           />

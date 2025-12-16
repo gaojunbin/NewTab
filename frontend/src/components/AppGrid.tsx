@@ -67,7 +67,7 @@ function AppGrid({ appGroups }: AppGridProps) {
           </div>
 
           {/* Apps Grid */}
-          <div className="grid grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-4">
+          <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-5 md:grid-cols-6 lg:grid-cols-8 gap-3 sm:gap-4">
             {group.apps.map((app, index) => (
               <motion.div
                 key={app.id}
@@ -81,29 +81,29 @@ function AppGrid({ appGroups }: AppGridProps) {
                 {isEditMode ? (
                   <div className="relative">
                     <div
-                      className="flex flex-col items-center gap-3 p-4 rounded-2xl transition-all duration-300"
+                      className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-2xl transition-all duration-300"
                       style={{
                         background: `linear-gradient(135deg, ${settings.accentColor}15 0%, ${settings.accentColor}05 100%)`,
                         border: `1px solid ${settings.accentColor}30`,
                       }}
                     >
                       <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center"
+                        className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center"
                         style={{
                           background: `linear-gradient(135deg, ${settings.accentColor}30 0%, ${settings.accentColor}10 100%)`,
                         }}
                       >
                         <Icon
                           icon={app.icon.startsWith('mdi:') ? app.icon : `mdi:${app.icon}`}
-                          className="w-7 h-7"
+                          className="w-5 h-5 sm:w-7 sm:h-7"
                           style={{ color: settings.textColor }}
                         />
                       </div>
-                      <span className="text-xs text-center line-clamp-2 w-full leading-tight" style={{ color: settings.textColor }}>
+                      <span className="text-[10px] sm:text-xs text-center line-clamp-2 w-full leading-tight" style={{ color: settings.textColor }}>
                         {app.name}
                       </span>
                     </div>
-                    <div className="absolute -top-2 -right-2 flex gap-1">
+                    <div className="absolute -top-1 -right-1 sm:-top-2 sm:-right-2 flex gap-1">
                       <button
                         onClick={() => setEditingApp({ groupId: group.id, app })}
                         className="w-6 h-6 rounded-full flex items-center justify-center shadow-lg"
@@ -124,7 +124,7 @@ function AppGrid({ appGroups }: AppGridProps) {
                     href={app.url.startsWith('http') ? app.url : `https://${app.url}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex flex-col items-center gap-3 p-4 rounded-2xl transition-all duration-300"
+                    className="flex flex-col items-center gap-2 sm:gap-3 p-3 sm:p-4 rounded-2xl transition-all duration-300"
                     style={{
                       background: hoveredApp === app.id
                         ? `linear-gradient(135deg, ${settings.accentColor}25 0%, ${settings.accentColor}10 100%)`
@@ -137,7 +137,7 @@ function AppGrid({ appGroups }: AppGridProps) {
                     }}
                   >
                     <motion.div
-                      className="w-12 h-12 rounded-xl flex items-center justify-center"
+                      className="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center"
                       style={{
                         background: `linear-gradient(135deg, ${settings.accentColor}20 0%, ${settings.accentColor}08 100%)`,
                         boxShadow: hoveredApp === app.id
@@ -149,12 +149,12 @@ function AppGrid({ appGroups }: AppGridProps) {
                     >
                       <Icon
                         icon={app.icon.startsWith('mdi:') ? app.icon : `mdi:${app.icon}`}
-                        className="w-7 h-7"
+                        className="w-5 h-5 sm:w-7 sm:h-7"
                         style={{ color: settings.textColor }}
                       />
                     </motion.div>
                     <span
-                      className="text-xs text-center line-clamp-2 w-full leading-tight"
+                      className="text-[10px] sm:text-xs text-center line-clamp-2 w-full leading-tight"
                       style={{
                         color: hoveredApp === app.id ? settings.textColor : settings.accentColor,
                       }}

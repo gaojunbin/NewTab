@@ -90,7 +90,7 @@ function App() {
       {/* Hero Section - Full Screen */}
       <section className="min-h-screen h-screen flex flex-col relative snap-start snap-always">
         {/* Main Content - Centered */}
-        <div className="flex-1 flex flex-col items-center justify-center px-6">
+        <div className="flex-1 flex flex-col items-center justify-center px-4 sm:px-6">
           {/* Greeting */}
           {settings.showGreeting && (
             <motion.div
@@ -156,7 +156,7 @@ function App() {
       {/* Content Section - Apps & Bookmarks */}
       <section
         ref={contentRef}
-        className="min-h-screen px-6 py-8 snap-start"
+        className="min-h-screen px-4 sm:px-6 py-6 sm:py-8 snap-start"
       >
         <div className="max-w-5xl mx-auto">
           {/* Mini Filter Search Bar */}

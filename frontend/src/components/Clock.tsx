@@ -56,7 +56,7 @@ function Clock() {
     >
       {/* Greeting */}
       <h2
-        className="text-2xl md:text-3xl font-medium tracking-tight mb-4"
+        className="text-xl sm:text-2xl md:text-3xl font-medium tracking-tight mb-3 sm:mb-4"
         style={{ color: settings.textColor }}
       >
         {getGreeting()}
@@ -64,16 +64,16 @@ function Clock() {
 
       {/* Time */}
       {settings.showClock && (
-        <div className="flex items-baseline justify-center gap-2 mb-2">
+        <div className="flex items-baseline justify-center gap-1 sm:gap-2 mb-2">
           <h1
-            className="text-6xl md:text-7xl font-thin tracking-tighter tabular-nums"
+            className="text-5xl sm:text-6xl md:text-7xl font-thin tracking-tighter tabular-nums"
             style={{ color: settings.textColor }}
           >
             {formatTime(time)}
           </h1>
           {settings.clockShowSeconds && (
             <span
-              className="text-2xl md:text-3xl font-thin tabular-nums"
+              className="text-xl sm:text-2xl md:text-3xl font-thin tabular-nums"
               style={{ color: settings.accentColor }}
             >
               {time.getSeconds().toString().padStart(2, '0')}
@@ -81,7 +81,7 @@ function Clock() {
           )}
           {getAmPm() && (
             <span
-              className="text-lg font-light ml-1"
+              className="text-base sm:text-lg font-light ml-1"
               style={{ color: settings.accentColor }}
             >
               {getAmPm()}
@@ -93,7 +93,7 @@ function Clock() {
       {/* Date */}
       {settings.showClock && (
         <p
-          className="text-sm font-normal tracking-wide"
+          className="text-xs sm:text-sm font-normal tracking-wide"
           style={{ color: settings.accentColor }}
         >
           {formatDate(time)}
@@ -103,7 +103,7 @@ function Clock() {
       {/* Multi-timezone */}
       {settings.showClock && settings.showMultiTimezone && (
         <div
-          className="flex gap-4 mt-4 text-xs justify-center flex-wrap"
+          className="flex gap-3 sm:gap-4 mt-3 sm:mt-4 text-[10px] sm:text-xs justify-center flex-wrap px-4"
           style={{ color: settings.accentColor }}
         >
           {timezones.map((tz) => (

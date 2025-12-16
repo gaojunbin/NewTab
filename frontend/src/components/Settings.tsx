@@ -25,18 +25,18 @@ function Settings() {
   return (
     <AnimatePresence>
       {isOpen && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4" onClick={() => setIsOpen(false)}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-end sm:items-center justify-center sm:p-4" onClick={() => setIsOpen(false)}>
           <motion.div
-            initial={{ scale: 0.9 }} animate={{ scale: 1 }} exit={{ scale: 0.9 }}
-            className="rounded-2xl w-full max-w-2xl max-h-[80vh] overflow-hidden backdrop-blur-[12px]"
+            initial={{ scale: 0.9, y: 100 }} animate={{ scale: 1, y: 0 }} exit={{ scale: 0.9, y: 100 }}
+            className="rounded-t-2xl sm:rounded-2xl w-full sm:max-w-2xl max-h-[85vh] sm:max-h-[80vh] overflow-hidden backdrop-blur-[12px]"
             style={{
               background: settings.backgroundColor,
               border: `1px solid ${settings.accentColor}40`,
             }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between px-6 py-4" style={{ borderBottom: `1px solid ${settings.accentColor}20` }}>
-              <h2 className="text-xl font-semibold" style={{ color: settings.textColor }}>设置</h2>
+            <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4" style={{ borderBottom: `1px solid ${settings.accentColor}20` }}>
+              <h2 className="text-lg sm:text-xl font-semibold" style={{ color: settings.textColor }}>设置</h2>
               <button onClick={() => setIsOpen(false)} className="p-2 rounded-lg hover:opacity-70" style={{ color: settings.accentColor }}><X className="w-5 h-5" /></button>
             </div>
             <div className="flex" style={{ borderBottom: `1px solid ${settings.accentColor}20` }}>
@@ -44,17 +44,17 @@ function Settings() {
                 <button
                   key={tab.id}
                   onClick={() => setActiveTab(tab.id)}
-                  className="flex items-center gap-2 px-4 py-3 text-sm transition-colors"
+                  className="flex-1 sm:flex-none flex items-center justify-center sm:justify-start gap-1.5 sm:gap-2 px-3 sm:px-4 py-2.5 sm:py-3 text-xs sm:text-sm transition-colors"
                   style={{
                     color: activeTab === tab.id ? settings.textColor : settings.accentColor,
                     borderBottom: activeTab === tab.id ? `2px solid ${settings.accentColor}` : '2px solid transparent',
                   }}
                 >
-                  <tab.icon className="w-4 h-4" />{tab.label}
+                  <tab.icon className="w-4 h-4" /><span className="hidden xs:inline sm:inline">{tab.label}</span>
                 </button>
               ))}
             </div>
-            <div className="p-6 overflow-y-auto max-h-[60vh]">
+            <div className="p-4 sm:p-6 overflow-y-auto max-h-[65vh] sm:max-h-[60vh]">
               {activeTab === 'appearance' && <AppearanceSettings settings={settings} setSettings={setSettings} setThemePreset={setThemePreset} />}
               {activeTab === 'features' && <FeaturesSettings settings={settings} setSettings={setSettings} />}
               {activeTab === 'backup' && <BackupSettings settings={settings} resetSettings={resetSettings} />}
@@ -89,12 +89,12 @@ function AppearanceSettings({ settings, setSettings, setThemePreset }: { setting
       </div>
       <div>
         <label className="block text-sm mb-3" style={{ color: settings.accentColor }}>主题预设</label>
-        <div className="grid grid-cols-4 sm:grid-cols-6 gap-3">
+        <div className="grid grid-cols-3 xs:grid-cols-4 sm:grid-cols-6 gap-2 sm:gap-3">
           {themePresets.map((preset) => (
             <button
               key={preset.name}
               onClick={() => setThemePreset(preset)}
-              className="flex flex-col items-center gap-2 p-3 rounded-xl transition-all hover:scale-105"
+              className="flex flex-col items-center gap-1.5 sm:gap-2 p-2 sm:p-3 rounded-xl transition-all hover:scale-105"
               style={{
                 background: settings.backgroundColor === preset.primary ? `${settings.accentColor}30` : `${settings.accentColor}10`,
                 border: settings.backgroundColor === preset.primary ? `2px solid ${settings.accentColor}` : '2px solid transparent',

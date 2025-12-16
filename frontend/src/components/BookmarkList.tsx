@@ -26,7 +26,7 @@ function BookmarkList({ bookmarks }: BookmarkListProps) {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             transition={{ delay: idx * 0.05, type: 'spring', stiffness: 200 }}
-            className="rounded-2xl p-5 transition-all duration-300 hover:shadow-lg"
+            className="rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:shadow-lg"
             style={{
               background: `linear-gradient(135deg, ${settings.accentColor}10 0%, ${settings.accentColor}05 100%)`,
               border: `1px solid ${settings.accentColor}20`,
