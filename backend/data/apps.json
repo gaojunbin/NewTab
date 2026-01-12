@@ -6,7 +6,7 @@
       "apps": [
         {
           "name": "BetaQuant",
-          "url": "quant.junbingao.com",
+          "url": "betaquant.top",
           "icon": "bitcoin",
           "id": "app-0-0"
         },
@@ -45,12 +45,6 @@
           "url": "pdf.junbingao.com",
           "icon": "file-pdf-box",
           "id": "app-0-6"
-        },
-        {
-          "name": "PDF Translate",
-          "url": "pdftrans.junbingao.com",
-          "icon": "file-pdf-box",
-          "id": "app-0-7"
         },
         {
           "name": "Image Toolkit",
@@ -163,12 +157,6 @@
           "id": "app-1-12"
         },
         {
-          "name": "Junbin MindMap",
-          "url": "mind.junbingao.com",
-          "icon": "brain",
-          "id": "app-1-13"
-        },
-        {
           "name": "Junbin WebMonitor",
           "url": "webmonitor.junbingao.com",
           "icon": "eye-check-outline",
@@ -197,18 +185,6 @@
           "url": "vt.junbingao.com",
           "icon": "clipboard-flow",
           "id": "app-1-18"
-        },
-        {
-          "name": "AI API",
-          "url": "newapi.junbingao.com",
-          "icon": "api",
-          "id": "app-1-19"
-        },
-        {
-          "name": "AI Prompt",
-          "url": "prompt.junbingao.com",
-          "icon": "comment-text-multiple-outline",
-          "id": "app-1-20"
         },
         {
           "name": "Claude2API",
@@ -265,10 +241,10 @@
           "id": "app-1-29"
         },
         {
-          "name": "File Share",
-          "url": "paste.junbingao.com",
-          "icon": "file-arrow-left-right",
-          "id": "app-1-30"
+          "name": "AI Status",
+          "url": "https://aistatus.junbingao.com",
+          "icon": "api",
+          "id": "2b1ly97"
         }
       ],
       "id": "group-1"
