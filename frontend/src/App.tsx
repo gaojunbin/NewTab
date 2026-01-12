@@ -79,6 +79,33 @@ function App() {
     setFilterQuery('');
   };
 
+  // Track if user was on first page (to detect scroll transition)
+  const wasOnFirstPageRef = useRef(true);
+
+  // Auto-activate filter mode when scrolling from first page to content section
+  useEffect(() => {
+    const container = document.querySelector('.snap-y');
+    if (!container) return;
+
+    const handleScroll = () => {
+      const scrollTop = container.scrollTop;
+      const viewportHeight = window.innerHeight;
+      const isOnFirstPage = scrollTop < viewportHeight * 0.5;
+
+      // Detect transition from first page to second page
+      if (wasOnFirstPageRef.current && !isOnFirstPage) {
+        // User just scrolled from first page to second page
+        setIsFilterMode(true);
+        setTimeout(() => filterInputRef.current?.focus(), 100);
+      }
+
+      wasOnFirstPageRef.current = isOnFirstPage;
+    };
+
+    container.addEventListener('scroll', handleScroll);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
   return (
     <div
       className="w-full h-screen overflow-y-auto snap-y snap-mandatory scroll-smooth"

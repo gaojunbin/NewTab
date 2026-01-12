@@ -42,9 +42,9 @@ function SearchBar({ onFilterModeChange }: SearchBarProps) {
       const parts = query.split(' ');
       const prefix = parts[0];
 
-      // Check for filter mode - need space after /f or /filter
-      if ((prefix === '/f' || prefix === '/filter') && parts.length > 1) {
-        const filterQuery = parts.slice(1).join(' ');
+      // Check for filter mode - /f or /filter triggers immediately
+      if (prefix === '/f' || prefix === '/filter') {
+        const filterQuery = parts.length > 1 ? parts.slice(1).join(' ') : '';
         setQuery(''); // Clear the main search bar
         onFilterModeChange?.(true, filterQuery);
         return;
