@@ -45,6 +45,15 @@ export interface WeatherData {
   feelsLike?: number;
 }
 
+export interface GeoLocation {
+  city: string;
+  country: string;
+  countryCode: string;
+  timezone: string;
+  lat: number;
+  lon: number;
+}
+
 export interface Countdown {
   id: string;
   name: string;
@@ -67,6 +76,7 @@ export interface Settings {
   clockShowSeconds: boolean;
   showMultiTimezone: boolean;
   weatherCity: string;
+  weatherCityManuallySet?: boolean;
   defaultSearchEngine: string;
   searchHistory: string[];
   countdowns: Countdown[];

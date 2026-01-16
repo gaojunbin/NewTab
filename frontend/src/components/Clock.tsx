@@ -1,36 +1,84 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { useSettingsStore } from '../stores/useSettingsStore';
 
 const greetings = ['Good Night', 'Good Morning', 'Good Afternoon', 'Good Evening'];
 
-const timezones = [
+// Fixed timezones to always show (after detected location)
+const fixedTimezones = [
   { label: 'Beijing', timezone: 'Asia/Shanghai' },
-  { label: 'Singapore', timezone: 'Asia/Singapore' },
   { label: 'New York', timezone: 'America/New_York' },
   { label: 'London', timezone: 'Europe/London' },
+  { label: 'Sydney', timezone: 'Australia/Sydney' },
 ];
 
 function Clock() {
-  const { settings } = useSettingsStore();
+  const { settings, detectedLocation } = useSettingsStore();
   const [time, setTime] = useState(new Date());
+
+  // Build dynamic timezone list: detected location first, then fixed timezones (deduplicated)
+  const timezones = useMemo(() => {
+    const result: { label: string; timezone: string }[] = [];
+    const seenTimezones = new Set<string>();
+
+    // Add detected location first
+    if (detectedLocation?.timezone) {
+      result.push({
+        label: detectedLocation.city,
+        timezone: detectedLocation.timezone,
+      });
+      seenTimezones.add(detectedLocation.timezone);
+    }
+
+    // Add fixed timezones, skipping duplicates
+    for (const tz of fixedTimezones) {
+      if (!seenTimezones.has(tz.timezone)) {
+        result.push(tz);
+        seenTimezones.add(tz.timezone);
+      }
+    }
+
+    return result;
+  }, [detectedLocation]);
+
+  // Use detected timezone or fallback to local
+  const activeTimezone = detectedLocation?.timezone;
 
   useEffect(() => {
     const timer = setInterval(() => setTime(new Date()), 1000);
     return () => clearInterval(timer);
   }, []);
 
+  // Get hour in the active timezone
+  const getHourInTimezone = (date: Date) => {
+    const timeStr = date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      hour12: false,
+      timeZone: activeTimezone,
+    });
+    return parseInt(timeStr, 10);
+  };
+
   const formatTime = (date: Date) => {
-    const hours = settings.clockFormat === '12h'
-      ? date.getHours() % 12 || 12
-      : date.getHours();
-    const minutes = date.getMinutes().toString().padStart(2, '0');
-    return `${hours}:${minutes}`;
+    return date.toLocaleTimeString('en-US', {
+      hour: 'numeric',
+      minute: '2-digit',
+      hour12: settings.clockFormat === '12h',
+      timeZone: activeTimezone,
+    }).replace(/\s?(AM|PM)$/i, ''); // Remove AM/PM, we show it separately
+  };
+
+  const getSeconds = (date: Date) => {
+    return date.toLocaleTimeString('en-US', {
+      second: '2-digit',
+      timeZone: activeTimezone,
+    }).padStart(2, '0');
   };
 
   const getAmPm = () => {
     if (settings.clockFormat !== '12h') return null;
-    return time.getHours() >= 12 ? 'PM' : 'AM';
+    const hour = getHourInTimezone(time);
+    return hour >= 12 ? 'PM' : 'AM';
   };
 
   const formatDate = (date: Date) => {
@@ -38,11 +86,12 @@ function Clock() {
       weekday: 'long',
       month: 'long',
       day: 'numeric',
+      timeZone: activeTimezone,
     });
   };
 
   const getGreeting = () => {
-    const hour = time.getHours();
+    const hour = getHourInTimezone(time);
     const index = Math.floor(hour / 6);
     const greeting = greetings[index];
     return settings.greetingName ? `${greeting}, ${settings.greetingName}` : greeting;
@@ -76,7 +125,7 @@ function Clock() {
               className="text-xl sm:text-2xl md:text-3xl font-thin tabular-nums"
               style={{ color: settings.accentColor }}
             >
-              {time.getSeconds().toString().padStart(2, '0')}
+              {getSeconds(time)}
             </span>
           )}
           {getAmPm() && (

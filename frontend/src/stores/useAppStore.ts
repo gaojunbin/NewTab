@@ -1,6 +1,5 @@
 import { create } from 'zustand';
 import type { AppGroup, Bookmark, SearchProvider } from '../types';
-import { getAuthHeaders } from '../services/api';
 
 interface AppState {
   appGroups: AppGroup[];

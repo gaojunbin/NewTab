@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { ChevronDown, Search, X } from 'lucide-react';
 import { useSettingsStore } from './stores/useSettingsStore';
 import { useAppStore } from './stores/useAppStore';
+import { geolocationApi } from './services/api';
 import Clock from './components/Clock';
 import SearchBar from './components/SearchBar';
 import AppGrid from './components/AppGrid';
@@ -12,7 +13,7 @@ import Settings from './components/Settings';
 import EditModeToggle from './components/EditModeToggle';
 
 function App() {
-  const { settings } = useSettingsStore();
+  const { settings, initializeFromLocation, locationInitialized } = useSettingsStore();
   const { appGroups, bookmarks, fetchApps, fetchBookmarks, fetchProviders } = useAppStore();
   const [filterQuery, setFilterQuery] = useState('');
   const [isFilterMode, setIsFilterMode] = useState(false);
@@ -24,6 +25,19 @@ function App() {
     fetchBookmarks();
     fetchProviders();
   }, [fetchApps, fetchBookmarks, fetchProviders]);
+
+  // Initialize location from IP geolocation
+  useEffect(() => {
+    if (locationInitialized) return;
+
+    geolocationApi.getLocation()
+      .then(location => {
+        initializeFromLocation(location);
+      })
+      .catch(error => {
+        console.error('Failed to fetch geolocation:', error);
+      });
+  }, [locationInitialized, initializeFromLocation]);
 
   // Filter apps and bookmarks based on query
   const filteredAppGroups = useMemo(() => {

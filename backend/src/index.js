@@ -7,6 +7,7 @@ import { settingsRouter } from './routes/settings.js';
 import { weatherRouter } from './routes/weather.js';
 import { searchRouter } from './routes/search.js';
 import { authRouter } from './routes/auth.js';
+import { geolocationRouter } from './routes/geolocation.js';
 
 const app = express();
 const PORT = process.env.PORT || 3001;
@@ -22,6 +23,7 @@ app.use('/api/settings', settingsRouter);
 app.use('/api/weather', weatherRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/auth', authRouter);
+app.use('/api/geolocation', geolocationRouter);
 
 // Health check
 app.get('/api/health', (req, res) => {

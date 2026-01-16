@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import type { Settings, ThemePreset } from '../types';
+import type { Settings, ThemePreset, GeoLocation } from '../types';
 
 // Original theme presets from the old version
 export const themePresets: ThemePreset[] = [
@@ -40,6 +40,8 @@ const defaultSettings: Settings = {
 interface SettingsState {
   settings: Settings;
   isEditMode: boolean;
+  detectedLocation: GeoLocation | null;
+  locationInitialized: boolean;
   setSettings: (settings: Partial<Settings>) => void;
   setThemePreset: (preset: ThemePreset) => void;
   toggleEditMode: () => void;
@@ -49,6 +51,7 @@ interface SettingsState {
   addCountdown: (countdown: { name: string; date: string; color?: string }) => void;
   removeCountdown: (id: string) => void;
   resetSettings: () => void;
+  initializeFromLocation: (location: GeoLocation) => void;
 }
 
 export const useSettingsStore = create<SettingsState>()(
@@ -56,11 +59,20 @@ export const useSettingsStore = create<SettingsState>()(
     (set) => ({
       settings: defaultSettings,
       isEditMode: false,
+      detectedLocation: null,
+      locationInitialized: false,
 
       setSettings: (newSettings) =>
-        set((state) => ({
-          settings: { ...state.settings, ...newSettings },
-        })),
+        set((state) => {
+          // If weatherCity is being changed, mark it as manually set
+          const updates: Partial<Settings> = { ...newSettings };
+          if ('weatherCity' in newSettings && newSettings.weatherCity !== state.settings.weatherCity) {
+            updates.weatherCityManuallySet = true;
+          }
+          return {
+            settings: { ...state.settings, ...updates },
+          };
+        }),
 
       setThemePreset: (preset) =>
         set((state) => ({
@@ -114,9 +126,31 @@ export const useSettingsStore = create<SettingsState>()(
         })),
 
       resetSettings: () => set({ settings: defaultSettings }),
+
+      initializeFromLocation: (location) =>
+        set((state) => {
+          const updates: Partial<SettingsState> = {
+            detectedLocation: location,
+            locationInitialized: true,
+          };
+
+          // Only update weather city if not manually set
+          if (!state.settings.weatherCityManuallySet) {
+            updates.settings = {
+              ...state.settings,
+              weatherCity: location.city,
+            };
+          }
+
+          return updates;
+        }),
     }),
     {
       name: 'newtab-settings',
+      partialize: (state) => ({
+        settings: state.settings,
+        isEditMode: state.isEditMode,
+      }),
     }
   )
 );

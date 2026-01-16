@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Settings, Pencil, X, Lock } from 'lucide-react';
 import { useSettingsStore } from '../stores/useSettingsStore';
-import { authApi, getAuthToken } from '../services/api';
+import { authApi } from '../services/api';
 
 function EditModeToggle() {
   const { isEditMode, toggleEditMode, settings } = useSettingsStore();

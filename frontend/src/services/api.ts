@@ -83,6 +83,23 @@ export const iconApi = {
   },
 };
 
+export interface GeoLocationResponse {
+  city: string;
+  country: string;
+  countryCode: string;
+  timezone: string;
+  lat: number;
+  lon: number;
+}
+
+export const geolocationApi = {
+  async getLocation(): Promise<GeoLocationResponse> {
+    const res = await fetch(`${API_BASE}/geolocation`);
+    if (!res.ok) throw new Error('Failed to fetch geolocation');
+    return res.json();
+  },
+};
+
 export const authApi = {
   async verifyPassword(password: string): Promise<boolean> {
     const res = await fetch(`${API_BASE}/auth/verify`, {
