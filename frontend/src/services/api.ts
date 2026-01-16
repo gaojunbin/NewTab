@@ -1,5 +1,28 @@
 const API_BASE = '/api';
 
+// Token management
+const AUTH_TOKEN_KEY = 'newtab-auth-token';
+
+export function getAuthToken(): string | null {
+  return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+export function setAuthToken(token: string): void {
+  localStorage.setItem(AUTH_TOKEN_KEY, token);
+}
+
+export function clearAuthToken(): void {
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+}
+
+export function getAuthHeaders(): HeadersInit {
+  const token = getAuthToken();
+  if (token) {
+    return { Authorization: `Bearer ${token}` };
+  }
+  return {};
+}
+
 export interface WeatherResponse {
   city: string;
   temp: number;

@@ -300,6 +300,49 @@
         }
       ],
       "id": "bookmark-10"
+    },
+    {
+      "category": "SIM number",
+      "id": "pbrzueo",
+      "links": [
+        {
+          "name": "5sim",
+          "url": "https://5sim.net/",
+          "id": "9baqxa3"
+        }
+      ]
+    },
+    {
+      "category": "Apple ID",
+      "id": "0d702sd",
+      "links": [
+        {
+          "name": "https://store.kxsw.org/",
+          "url": "https://store.kxsw.org/",
+          "id": "dy27mnz"
+        },
+        {
+          "name": "https://duoduo.uno/",
+          "url": "https://duoduo.uno/",
+          "id": "59wo24c"
+        }
+      ]
+    },
+    {
+      "category": "IP test",
+      "id": "dvox2hq",
+      "links": [
+        {
+          "name": "ping0",
+          "url": "https://ping0.cc",
+          "id": "1cyc9p8"
+        },
+        {
+          "name": "ipinfo",
+          "url": "https://ipinfo.io/what-is-my-ip",
+          "id": "mk7t7v1"
+        }
+      ]
     }
   ]
 }

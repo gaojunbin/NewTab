@@ -1,19 +1,22 @@
 import express from 'express';
+import { generateToken } from '../middleware/auth.js';
 
 export const authRouter = express.Router();
 
-// Verify edit password
+// Verify edit password and return token
 authRouter.post('/verify', (req, res) => {
   const { password } = req.body;
   const editPassword = process.env.EDIT_PASSWORD || '';
 
-  // If no password is set, allow access
+  // If no password is set, return token directly
   if (!editPassword) {
-    return res.json({ success: true, message: 'No password required' });
+    const token = generateToken();
+    return res.json({ success: true, token, message: 'No password required' });
   }
 
   if (password === editPassword) {
-    return res.json({ success: true });
+    const token = generateToken();
+    return res.json({ success: true, token });
   }
 
   return res.status(401).json({ success: false, message: 'Invalid password' });
