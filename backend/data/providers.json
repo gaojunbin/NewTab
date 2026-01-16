@@ -4,6 +4,8 @@
         {"name":"Baidu","url":"https://www.baidu.com","prefix":"/bd"},
         {"name":"Microsoft Bing","url":"https://www.bing.com","prefix":"/bi"},
         {"name":"GitHub","url":"https://github.com","prefix":"/gh"},
-        {"name":"YouTube","url":"https://www.youtube.com","prefix":"/y"}
+        {"name":"YouTube","url":"https://www.youtube.com","prefix":"/y"},
+        {"name":"NodeSeek","url":"https://www.nodeseek.com","prefix":"/ns"},
+        {"name":"Linux.do","url":"https://linux.do","prefix":"/ld"}
     ]
 }

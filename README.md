@@ -8,7 +8,7 @@
 
 - **现代化UI** - Glassmorphism 设计风格，流畅动画效果
 - **可视化编辑** - 在线添加/编辑/删除应用和书签
-- **多搜索引擎** - Google、百度、Bing、GitHub、YouTube 等快捷搜索
+- **多搜索引擎** - Google、GitHub、YouTube、NodeSeek、Linux.do 等快捷搜索
 - **实时天气** - 自动获取天气信息
 - **多主题** - 10+ 预设主题，支持自定义颜色
 - **响应式布局** - 适配桌面、平板、手机
@@ -63,6 +63,9 @@ ports:
   - `/bi` - Bing
   - `/gh` - GitHub
   - `/y` - YouTube
+  - `/ns` - NodeSeek
+  - `/ld` - Linux.do
+  - `/f` - JunbinUniverse（站内应用过滤）
 - 搜索建议自动补全
 - 搜索历史记录
 

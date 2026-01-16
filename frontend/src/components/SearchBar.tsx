@@ -10,7 +10,12 @@ const searchEngines = [
   { id: 'google', name: 'Google', icon: 'logos:google-icon', url: 'https://www.google.com/search?q=', home: 'https://www.google.com' },
   { id: 'github', name: 'GitHub', icon: 'mdi:github', url: 'https://github.com/search?q=', home: 'https://github.com' },
   { id: 'youtube', name: 'YouTube', icon: 'logos:youtube-icon', url: 'https://www.youtube.com/results?search_query=', home: 'https://www.youtube.com' },
+  { id: 'nodeseek', name: 'NodeSeek', icon: 'mdi:server-network', url: 'https://www.nodeseek.com/search?q=', home: 'https://www.nodeseek.com' },
+  { id: 'linuxdo', name: 'Linux.do', icon: 'mdi:linux', url: 'https://linux.do/search?q=', home: 'https://linux.do' },
 ];
+
+// Special filter option for in-app filtering
+const filterOption = { id: 'filter', name: 'JunbinUniverse', icon: 'mdi:filter-outline' };
 
 const engineIcons: Record<string, string> = Object.fromEntries(searchEngines.map(e => [e.id, e.icon]));
 const searchUrls: Record<string, string> = Object.fromEntries(searchEngines.map(e => [e.id, e.url]));
@@ -262,6 +267,27 @@ function SearchBar({ onFilterModeChange }: SearchBarProps) {
                 )}
               </button>
             ))}
+            {/* Divider */}
+            <div className="mx-3 my-1 border-t" style={{ borderColor: `${settings.accentColor}30` }} />
+            {/* Filter option */}
+            <button
+              onClick={() => {
+                setShowEngineDropdown(false);
+                onFilterModeChange?.(true, '');
+              }}
+              onMouseEnter={() => setHoveredEngine(filterOption.id)}
+              onMouseLeave={() => setHoveredEngine(null)}
+              className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors duration-150"
+              style={{
+                backgroundColor: hoveredEngine === filterOption.id
+                  ? `${settings.accentColor}15`
+                  : 'transparent',
+              }}
+            >
+              <Icon icon={filterOption.icon} className="w-5 h-5" />
+              <span className="text-sm" style={{ color: settings.textColor }}>{filterOption.name}</span>
+              <span className="ml-auto text-xs opacity-60" style={{ color: settings.textColor }}>/f</span>
+            </button>
           </motion.div>
         )}
       </AnimatePresence>
