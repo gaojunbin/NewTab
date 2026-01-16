@@ -24,3 +24,7 @@ Thumbs.db
 
 # Docker
 docker-compose.old.yml
+
+# Build artifacts
+*.tsbuildinfo
+vite.config.d.ts

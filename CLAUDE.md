@@ -48,6 +48,7 @@ Personal navigation homepage with React frontend and Express backend (JSON file 
 - **Express.js** with JSON file storage in `data/`
 - **Routes**: One file per resource in `routes/` - apps, links, providers, settings, weather, search, auth
 - **Data files**: `apps.json`, `links.json`, `providers.json`
+- **Auth middleware**: Token-based authentication for edit operations (`middleware/auth.js`)
 
 ### Data Flow
 1. Frontend stores fetch from `/api/*` endpoints on mount
@@ -60,3 +61,5 @@ Personal navigation homepage with React frontend and Express backend (JSON file 
 - Generate IDs client-side: `Math.random().toString(36).substring(2, 9)`
 - Edit mode is global state in `useSettingsStore.isEditMode`
 - API updates use PUT with full data replacement (not PATCH)
+- Auth tokens stored in localStorage (`newtab-auth-token`), use `getAuthHeaders()` from `services/api.ts`
+- Drag-and-drop via @dnd-kit for reordering apps and groups
