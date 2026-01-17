@@ -1,6 +1,23 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, Pencil, Trash2, ExternalLink, Link as LinkIcon } from 'lucide-react';
+import { Plus, Pencil, Trash2, ExternalLink, Link as LinkIcon, GripVertical } from 'lucide-react';
+import {
+  DndContext,
+  closestCenter,
+  KeyboardSensor,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  useSortable,
+  verticalListSortingStrategy,
+  rectSortingStrategy,
+} from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
 import { useAppStore } from '../stores/useAppStore';
 import { useSettingsStore } from '../stores/useSettingsStore';
 import type { Bookmark, Link } from '../types';
@@ -9,98 +26,375 @@ interface BookmarkListProps {
   bookmarks: Bookmark[];
 }
 
+interface SortableLinkProps {
+  link: Link;
+  settings: any;
+  onEdit: () => void;
+  onDelete: () => void;
+}
+
+function SortableLink({ link, settings, onEdit, onDelete }: SortableLinkProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: link.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-2 px-3 py-2 rounded-lg"
+      {...attributes}
+    >
+      <div
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing opacity-50 hover:opacity-100 transition-opacity"
+        style={{ color: settings.accentColor }}
+      >
+        <GripVertical className="w-3 h-3" />
+      </div>
+      <span className="text-sm flex-1 truncate" style={{ color: settings.textColor }}>{link.name}</span>
+      <button
+        onClick={onEdit}
+        className="p-1 rounded hover:opacity-70"
+      >
+        <Pencil className="w-3 h-3" style={{ color: settings.accentColor }} />
+      </button>
+      <button
+        onClick={onDelete}
+        className="p-1 rounded hover:opacity-70"
+      >
+        <Trash2 className="w-3 h-3 text-red-400" />
+      </button>
+    </div>
+  );
+}
+
+interface SortableCategoryProps {
+  category: Bookmark;
+  settings: any;
+  isEditMode: boolean;
+  sensors: ReturnType<typeof useSensors>;
+  onEditCategory: () => void;
+  onDeleteCategory: () => void;
+  onEditLink: (link?: Link) => void;
+  onDeleteLink: (linkId: string) => void;
+  onReorderLinks: (categoryId: string, links: Link[], event: DragEndEvent) => void;
+  hoveredLink: string | null;
+  setHoveredLink: (id: string | null) => void;
+}
+
+function SortableCategory({
+  category,
+  settings,
+  isEditMode,
+  sensors,
+  onEditCategory,
+  onDeleteCategory,
+  onEditLink,
+  onDeleteLink,
+  onReorderLinks,
+  hoveredLink,
+  setHoveredLink,
+}: SortableCategoryProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: category.id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    zIndex: isDragging ? 1000 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:shadow-lg"
+      {...attributes}
+    >
+      <div
+        style={{
+          background: `linear-gradient(135deg, ${settings.accentColor}10 0%, ${settings.accentColor}05 100%)`,
+          border: `1px solid ${settings.accentColor}20`,
+          boxShadow: `0 4px 20px -8px ${settings.accentColor}15`,
+        }}
+        className="rounded-2xl p-4 sm:p-5 h-full"
+      >
+        {/* Category Header */}
+        <div className="flex items-center gap-2 mb-4">
+          {isEditMode && (
+            <div
+              {...listeners}
+              className="cursor-grab active:cursor-grabbing opacity-50 hover:opacity-100 transition-opacity"
+              style={{ color: settings.accentColor }}
+            >
+              <GripVertical className="w-4 h-4" />
+            </div>
+          )}
+          <div
+            className="w-8 h-8 rounded-lg flex items-center justify-center"
+            style={{
+              background: `linear-gradient(135deg, ${settings.accentColor}25 0%, ${settings.accentColor}10 100%)`,
+            }}
+          >
+            <LinkIcon className="w-4 h-4" style={{ color: settings.accentColor }} />
+          </div>
+          <h4
+            className="text-sm font-semibold flex-1"
+            style={{ color: settings.textColor }}
+          >
+            {category.category}
+          </h4>
+          {isEditMode && (
+            <div className="flex gap-1">
+              <button
+                onClick={onEditCategory}
+                className="p-1.5 rounded-lg transition-colors hover:opacity-70"
+                style={{ background: `${settings.accentColor}15` }}
+              >
+                <Pencil className="w-3 h-3" style={{ color: settings.accentColor }} />
+              </button>
+              <button
+                onClick={onDeleteCategory}
+                className="p-1.5 rounded-lg transition-colors hover:opacity-70 bg-red-500/10"
+              >
+                <Trash2 className="w-3 h-3 text-red-400" />
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Links List */}
+        <div className="space-y-1.5">
+          {isEditMode ? (
+            <DndContext
+              sensors={sensors}
+              collisionDetection={closestCenter}
+              onDragEnd={(event) => onReorderLinks(category.id, category.links, event)}
+            >
+              <SortableContext items={category.links.map(link => link.id)} strategy={verticalListSortingStrategy}>
+                {category.links.map((link) => (
+                  <SortableLink
+                    key={link.id}
+                    link={link}
+                    settings={settings}
+                    onEdit={() => onEditLink(link)}
+                    onDelete={() => { if (confirm('Delete?')) onDeleteLink(link.id); }}
+                  />
+                ))}
+              </SortableContext>
+            </DndContext>
+          ) : (
+            category.links.map((link) => (
+              <div
+                key={link.id}
+                onMouseEnter={() => setHoveredLink(link.id)}
+                onMouseLeave={() => setHoveredLink(null)}
+              >
+                <a
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-3 py-2 rounded-lg transition-all duration-200"
+                  style={{
+                    background: hoveredLink === link.id ? `${settings.accentColor}15` : 'transparent',
+                  }}
+                >
+                  <span
+                    className="text-sm flex-1 truncate transition-colors duration-200"
+                    style={{
+                      color: hoveredLink === link.id ? settings.textColor : settings.accentColor,
+                    }}
+                  >
+                    {link.name}
+                  </span>
+                  <ExternalLink
+                    className="w-3.5 h-3.5 flex-shrink-0 transition-all duration-200"
+                    style={{
+                      color: settings.accentColor,
+                      opacity: hoveredLink === link.id ? 0.8 : 0.3,
+                    }}
+                  />
+                </a>
+              </div>
+            ))
+          )}
+
+          {/* Add Link Button */}
+          {isEditMode && (
+            <button
+              onClick={() => onEditLink()}
+              className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed transition-all duration-300 hover:opacity-80"
+              style={{
+                borderColor: settings.accentColor + '30',
+                color: settings.accentColor,
+              }}
+            >
+              <Plus className="w-3.5 h-3.5" />
+              <span className="text-xs">Add Link</span>
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function BookmarkList({ bookmarks }: BookmarkListProps) {
-  const { deleteBookmark, deleteBookmarkCategory } = useAppStore();
+  const { deleteBookmark, deleteBookmarkCategory, reorderBookmarks, reorderBookmarkCategories } = useAppStore();
   const { isEditMode, settings } = useSettingsStore();
   const [editingLink, setEditingLink] = useState<{ categoryId: string; link?: Link } | null>(null);
   const [editingCategory, setEditingCategory] = useState<Bookmark | null>(null);
   const [hoveredLink, setHoveredLink] = useState<string | null>(null);
 
+  const sensors = useSensors(
+    useSensor(PointerSensor, {
+      activationConstraint: {
+        distance: 8,
+      },
+    }),
+    useSensor(KeyboardSensor, {
+      coordinateGetter: sortableKeyboardCoordinates,
+    })
+  );
+
+  const handleLinkDragEnd = (categoryId: string, links: Link[], event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = links.findIndex((link) => link.id === active.id);
+      const newIndex = links.findIndex((link) => link.id === over.id);
+      reorderBookmarks(categoryId, oldIndex, newIndex);
+    }
+  };
+
+  const handleCategoryDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (over && active.id !== over.id) {
+      const oldIndex = bookmarks.findIndex((cat) => cat.id === active.id);
+      const newIndex = bookmarks.findIndex((cat) => cat.id === over.id);
+      reorderBookmarkCategories(oldIndex, newIndex);
+    }
+  };
+
+  const renderCategories = () => {
+    const categoryElements = bookmarks.map((category) => (
+      <SortableCategory
+        key={category.id}
+        category={category}
+        settings={settings}
+        isEditMode={isEditMode}
+        sensors={sensors}
+        onEditCategory={() => setEditingCategory(category)}
+        onDeleteCategory={() => { if (confirm('Delete category?')) deleteBookmarkCategory(category.id); }}
+        onEditLink={(link) => setEditingLink({ categoryId: category.id, link })}
+        onDeleteLink={(linkId) => deleteBookmark(category.id, linkId)}
+        onReorderLinks={handleLinkDragEnd}
+        hoveredLink={hoveredLink}
+        setHoveredLink={setHoveredLink}
+      />
+    ));
+
+    // Add Category Card (only in edit mode)
+    if (isEditMode) {
+      categoryElements.push(
+        <motion.button
+          key="add-category"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          onClick={() => setEditingCategory({ id: '', category: '', links: [] })}
+          className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed transition-all duration-300 hover:scale-[1.02] min-h-[120px]"
+          style={{
+            borderColor: settings.accentColor + '30',
+            color: settings.accentColor,
+          }}
+        >
+          <Plus className="w-6 h-6" />
+          <span className="text-sm">New Category</span>
+        </motion.button>
+      );
+    }
+
+    return categoryElements;
+  };
+
   return (
     <div className="space-y-4">
       {/* Bookmark Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {bookmarks.map((category, idx) => (
-          <motion.div
-            key={category.id}
-            initial={{ opacity: 0, y: 20, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            transition={{ delay: idx * 0.05, type: 'spring', stiffness: 200 }}
-            className="rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:shadow-lg"
-            style={{
-              background: `linear-gradient(135deg, ${settings.accentColor}10 0%, ${settings.accentColor}05 100%)`,
-              border: `1px solid ${settings.accentColor}20`,
-              boxShadow: `0 4px 20px -8px ${settings.accentColor}15`,
-            }}
-          >
-            {/* Category Header */}
-            <div className="flex items-center gap-2 mb-4">
-              <div
-                className="w-8 h-8 rounded-lg flex items-center justify-center"
-                style={{
-                  background: `linear-gradient(135deg, ${settings.accentColor}25 0%, ${settings.accentColor}10 100%)`,
-                }}
-              >
-                <LinkIcon className="w-4 h-4" style={{ color: settings.accentColor }} />
-              </div>
-              <h4
-                className="text-sm font-semibold flex-1"
-                style={{ color: settings.textColor }}
-              >
-                {category.category}
-              </h4>
-              {isEditMode && (
-                <div className="flex gap-1">
-                  <button
-                    onClick={() => setEditingCategory(category)}
-                    className="p-1.5 rounded-lg transition-colors hover:opacity-70"
-                    style={{ background: `${settings.accentColor}15` }}
-                  >
-                    <Pencil className="w-3 h-3" style={{ color: settings.accentColor }} />
-                  </button>
-                  <button
-                    onClick={() => { if (confirm('Delete category?')) deleteBookmarkCategory(category.id); }}
-                    className="p-1.5 rounded-lg transition-colors hover:opacity-70 bg-red-500/10"
-                  >
-                    <Trash2 className="w-3 h-3 text-red-400" />
-                  </button>
-                </div>
-              )}
+      {isEditMode ? (
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleCategoryDragEnd}
+        >
+          <SortableContext items={bookmarks.map(cat => cat.id)} strategy={rectSortingStrategy}>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              {renderCategories()}
             </div>
-
-            {/* Links List */}
-            <div className="space-y-1.5">
-              {category.links.map((link, linkIdx) => (
-                <motion.div
-                  key={link.id}
-                  initial={{ opacity: 0, x: -10 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: idx * 0.05 + linkIdx * 0.02 }}
-                  onMouseEnter={() => setHoveredLink(link.id)}
-                  onMouseLeave={() => setHoveredLink(null)}
+          </SortableContext>
+        </DndContext>
+      ) : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {bookmarks.map((category, idx) => (
+            <motion.div
+              key={category.id}
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              transition={{ delay: idx * 0.05, type: 'spring', stiffness: 200 }}
+              className="rounded-2xl p-4 sm:p-5 transition-all duration-300 hover:shadow-lg"
+              style={{
+                background: `linear-gradient(135deg, ${settings.accentColor}10 0%, ${settings.accentColor}05 100%)`,
+                border: `1px solid ${settings.accentColor}20`,
+                boxShadow: `0 4px 20px -8px ${settings.accentColor}15`,
+              }}
+            >
+              {/* Category Header */}
+              <div className="flex items-center gap-2 mb-4">
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center"
+                  style={{
+                    background: `linear-gradient(135deg, ${settings.accentColor}25 0%, ${settings.accentColor}10 100%)`,
+                  }}
                 >
-                  {isEditMode ? (
-                    <div
-                      className="flex items-center gap-2 px-3 py-2 rounded-lg"
-                      style={{
-                        background: `${settings.accentColor}10`,
-                      }}
-                    >
-                      <span className="text-sm flex-1 truncate" style={{ color: settings.textColor }}>{link.name}</span>
-                      <button
-                        onClick={() => setEditingLink({ categoryId: category.id, link })}
-                        className="p-1 rounded hover:opacity-70"
-                      >
-                        <Pencil className="w-3 h-3" style={{ color: settings.accentColor }} />
-                      </button>
-                      <button
-                        onClick={() => { if (confirm('Delete?')) deleteBookmark(category.id, link.id); }}
-                        className="p-1 rounded hover:opacity-70"
-                      >
-                        <Trash2 className="w-3 h-3 text-red-400" />
-                      </button>
-                    </div>
-                  ) : (
+                  <LinkIcon className="w-4 h-4" style={{ color: settings.accentColor }} />
+                </div>
+                <h4
+                  className="text-sm font-semibold flex-1"
+                  style={{ color: settings.textColor }}
+                >
+                  {category.category}
+                </h4>
+              </div>
+
+              {/* Links List */}
+              <div className="space-y-1.5">
+                {category.links.map((link, linkIdx) => (
+                  <motion.div
+                    key={link.id}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: idx * 0.05 + linkIdx * 0.02 }}
+                    onMouseEnter={() => setHoveredLink(link.id)}
+                    onMouseLeave={() => setHoveredLink(null)}
+                  >
                     <a
                       href={link.url}
                       target="_blank"
@@ -126,47 +420,13 @@ function BookmarkList({ bookmarks }: BookmarkListProps) {
                         }}
                       />
                     </a>
-                  )}
-                </motion.div>
-              ))}
-
-              {/* Add Link Button */}
-              {isEditMode && (
-                <motion.button
-                  initial={{ opacity: 0 }}
-                  animate={{ opacity: 1 }}
-                  onClick={() => setEditingLink({ categoryId: category.id })}
-                  className="w-full flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-dashed transition-all duration-300 hover:opacity-80"
-                  style={{
-                    borderColor: settings.accentColor + '30',
-                    color: settings.accentColor,
-                  }}
-                >
-                  <Plus className="w-3.5 h-3.5" />
-                  <span className="text-xs">Add Link</span>
-                </motion.button>
-              )}
-            </div>
-          </motion.div>
-        ))}
-
-        {/* Add Category Card */}
-        {isEditMode && (
-          <motion.button
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            onClick={() => setEditingCategory({ id: '', category: '', links: [] })}
-            className="flex flex-col items-center justify-center gap-2 p-5 rounded-2xl border-2 border-dashed transition-all duration-300 hover:scale-[1.02] min-h-[120px]"
-            style={{
-              borderColor: settings.accentColor + '30',
-              color: settings.accentColor,
-            }}
-          >
-            <Plus className="w-6 h-6" />
-            <span className="text-sm">New Category</span>
-          </motion.button>
-        )}
-      </div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
+          ))}
+        </div>
+      )}
 
       <AnimatePresence>
         {editingLink && (

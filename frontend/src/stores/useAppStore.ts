@@ -32,6 +32,8 @@ interface AppState {
 
   reorderApps: (groupId: string, fromIndex: number, toIndex: number) => Promise<void>;
   reorderGroups: (fromIndex: number, toIndex: number) => Promise<void>;
+  reorderBookmarks: (categoryId: string, fromIndex: number, toIndex: number) => Promise<void>;
+  reorderBookmarkCategories: (fromIndex: number, toIndex: number) => Promise<void>;
 }
 
 const API_BASE = '/api';
@@ -287,6 +289,36 @@ export const useAppStore = create<AppState>((set, get) => ({
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({ appGroups: updated }),
+    });
+  },
+
+  reorderBookmarks: async (categoryId, fromIndex, toIndex) => {
+    const { bookmarks } = get();
+    const updated = bookmarks.map((b) => {
+      if (b.id !== categoryId) return b;
+      const links = [...b.links];
+      const [removed] = links.splice(fromIndex, 1);
+      links.splice(toIndex, 0, removed);
+      return { ...b, links };
+    });
+    set({ bookmarks: updated });
+    await fetch(`${API_BASE}/links`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookmarks: updated }),
+    });
+  },
+
+  reorderBookmarkCategories: async (fromIndex, toIndex) => {
+    const { bookmarks } = get();
+    const updated = [...bookmarks];
+    const [removed] = updated.splice(fromIndex, 1);
+    updated.splice(toIndex, 0, removed);
+    set({ bookmarks: updated });
+    await fetch(`${API_BASE}/links`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ bookmarks: updated }),
     });
   },
 }));
