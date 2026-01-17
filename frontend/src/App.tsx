@@ -95,6 +95,7 @@ function App() {
 
   // Track if user was on first page (to detect scroll transition)
   const wasOnFirstPageRef = useRef(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
   // Auto-activate filter mode when scrolling from first page to content section
   useEffect(() => {
@@ -118,6 +119,26 @@ function App() {
 
     container.addEventListener('scroll', handleScroll);
     return () => container.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Prevent snap jump-back when scrolling past content end with mouse wheel
+  useEffect(() => {
+    const container = scrollContainerRef.current;
+    if (!container) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      const { scrollTop, scrollHeight, clientHeight } = container;
+      const isAtBottom = scrollTop + clientHeight >= scrollHeight - 1;
+      const isScrollingDown = e.deltaY > 0;
+
+      // Block scroll when at bottom and trying to scroll down
+      if (isAtBottom && isScrollingDown) {
+        e.preventDefault();
+      }
+    };
+
+    container.addEventListener('wheel', handleWheel, { passive: false });
+    return () => container.removeEventListener('wheel', handleWheel);
   }, []);
 
   return (
@@ -197,7 +218,7 @@ function App() {
       {/* Content Section - Apps & Bookmarks */}
       <section
         ref={contentRef}
-        className="min-h-screen px-4 sm:px-6 py-6 sm:py-8 snap-start"
+        className="min-h-screen px-4 sm:px-6 py-6 sm:py-8 snap-start overscroll-contain"
       >
         <div className="max-w-5xl mx-auto">
           {/* Mini Filter Search Bar */}
