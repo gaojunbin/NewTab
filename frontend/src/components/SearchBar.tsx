@@ -7,11 +7,11 @@ import { useSettingsStore } from '../stores/useSettingsStore';
 import { searchApi } from '../services/api';
 
 const searchEngines = [
-  { id: 'google', name: 'Google', icon: 'logos:google-icon', url: 'https://www.google.com/search?q=', home: 'https://www.google.com' },
-  { id: 'github', name: 'GitHub', icon: 'mdi:github', url: 'https://github.com/search?q=', home: 'https://github.com' },
-  { id: 'youtube', name: 'YouTube', icon: 'logos:youtube-icon', url: 'https://www.youtube.com/results?search_query=', home: 'https://www.youtube.com' },
-  { id: 'nodeseek', name: 'NodeSeek', icon: 'mdi:server-network', url: 'https://www.nodeseek.com/search?q=', home: 'https://www.nodeseek.com' },
-  { id: 'linuxdo', name: 'Linux.do', icon: 'mdi:linux', url: 'https://linux.do/search?q=', home: 'https://linux.do' },
+  { id: 'google', name: 'Google', icon: 'logos:google-icon', url: 'https://www.google.com/search?q=', home: 'https://www.google.com', prefix: '/g' },
+  { id: 'github', name: 'GitHub', icon: 'mdi:github', url: 'https://github.com/search?q=', home: 'https://github.com', prefix: '/gh' },
+  { id: 'youtube', name: 'YouTube', icon: 'logos:youtube-icon', url: 'https://www.youtube.com/results?search_query=', home: 'https://www.youtube.com', prefix: '/y' },
+  { id: 'nodeseek', name: 'NodeSeek', icon: 'mdi:server-network', url: 'https://www.nodeseek.com/search?q=', home: 'https://www.nodeseek.com', prefix: '/ns' },
+  { id: 'linux.do', name: 'Linux.do', icon: 'mdi:linux', url: 'https://linux.do/search?q=', home: 'https://linux.do', prefix: '/ld' },
 ];
 
 // Special filter option for in-app filtering
@@ -235,7 +235,7 @@ function SearchBar({ onFilterModeChange }: SearchBarProps) {
             initial={{ opacity: 0, y: -5 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -5 }}
-            className="absolute left-4 top-16 py-2 rounded-xl z-50 min-w-[160px] overflow-hidden"
+            className="absolute left-0 sm:left-4 bottom-full mb-2 sm:bottom-auto sm:mb-0 sm:top-16 py-2 rounded-xl z-50 min-w-[140px] sm:min-w-[160px] max-h-[50vh] sm:max-h-[60vh] overflow-y-auto overscroll-contain"
             style={{
               background: settings.backgroundColor,
               border: `1px solid ${settings.accentColor}40`,
@@ -262,8 +262,9 @@ function SearchBar({ onFilterModeChange }: SearchBarProps) {
               >
                 <Icon icon={engine.icon} className="w-5 h-5" />
                 <span className="text-sm" style={{ color: settings.textColor }}>{engine.name}</span>
+                <span className="ml-auto text-xs opacity-60" style={{ color: settings.textColor }}>{engine.prefix}</span>
                 {activeEngine === engine.id && (
-                  <span className="ml-auto text-xs" style={{ color: settings.accentColor }}>✓</span>
+                  <span className="text-xs" style={{ color: settings.accentColor }}>✓</span>
                 )}
               </button>
             ))}

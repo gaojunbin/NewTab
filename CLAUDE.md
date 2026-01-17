@@ -46,7 +46,7 @@ Personal navigation homepage with React frontend and Express backend (JSON file 
 
 ### Backend (`backend/`)
 - **Express.js** with JSON file storage in `data/`
-- **Routes**: One file per resource in `routes/` - apps, links, providers, settings, weather, search, auth
+- **Routes**: One file per resource in `routes/` - apps, links, providers, settings, weather, search, auth, geolocation
 - **Data files**: `apps.json`, `links.json`, `providers.json`
 - **Auth middleware**: Token-based authentication for edit operations (`middleware/auth.js`)
 
@@ -54,6 +54,11 @@ Personal navigation homepage with React frontend and Express backend (JSON file 
 1. Frontend stores fetch from `/api/*` endpoints on mount
 2. Updates are optimistically applied to Zustand state
 3. PUT requests sync full data to backend JSON files
+
+## Search Prefixes
+
+搜索框支持前缀命令快捷搜索（定义在 `SearchBar.tsx` 的 `searchEngines` 和 `backend/data/providers.json`）：
+- `/g` Google, `/gh` GitHub, `/y` YouTube, `/ns` NodeSeek, `/ld` Linux.do, `/f` 站内过滤
 
 ## Key Patterns
 

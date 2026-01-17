@@ -63,7 +63,7 @@ function Weather() {
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className="rounded-lg px-4 py-2 backdrop-blur-[12px] inline-flex items-center gap-4"
+      className="rounded-lg px-3 sm:px-4 py-2 backdrop-blur-[12px] inline-flex flex-col sm:flex-row items-center gap-1 sm:gap-4"
       style={{
         background: settings.theme === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.04)',
         border: `1px solid ${settings.theme === 'dark' ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.08)'}`,
@@ -71,11 +71,12 @@ function Weather() {
     >
       <div className="flex items-center gap-2">
         {getWeatherIcon(weather.condition)}
-        <span className="text-xl font-light" style={{ color: settings.textColor }}>{weather.temp}°C</span>
+        <span className="text-lg sm:text-xl font-light" style={{ color: settings.textColor }}>{weather.temp}°C</span>
+        <span className="capitalize text-xs sm:hidden" style={{ color: settings.accentColor }}>{weather.condition}</span>
       </div>
 
-      <div className="flex items-center gap-3 text-xs" style={{ color: settings.accentColor }}>
-        <span className="capitalize">{weather.condition}</span>
+      <div className="flex items-center gap-2 sm:gap-3 text-xs" style={{ color: settings.accentColor }}>
+        <span className="capitalize hidden sm:inline">{weather.condition}</span>
         <span className="flex items-center gap-1">
           <Droplets className="w-3 h-3" />
           {weather.humidity}%

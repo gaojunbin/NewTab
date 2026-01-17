@@ -59,7 +59,7 @@ function EditModeToggle() {
   return (
     <>
       <motion.div
-        className="fixed bottom-6 right-6 flex flex-col gap-3 z-40"
+        className="fixed bottom-4 right-4 sm:bottom-6 sm:right-6 flex flex-col gap-2 sm:gap-3 z-40"
         initial={{ opacity: 0, scale: 0.8 }}
         animate={{ opacity: 1, scale: 1 }}
         transition={{ delay: 0.5 }}
@@ -68,29 +68,29 @@ function EditModeToggle() {
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={handleEditClick}
-          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-colors"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-lg transition-colors"
           style={{
             background: isEditMode ? '#ef4444' : `${settings.accentColor}30`,
             border: `1px solid ${isEditMode ? '#ef4444' : settings.accentColor}`,
           }}
         >
           {isEditMode ? (
-            <X className="w-6 h-6" style={{ color: '#ffffff' }} />
+            <X className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: '#ffffff' }} />
           ) : (
-            <Pencil className="w-6 h-6" style={{ color: settings.textColor }} />
+            <Pencil className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: settings.textColor }} />
           )}
         </motion.button>
         <motion.button
           whileHover={{ scale: 1.1 }}
           whileTap={{ scale: 0.9 }}
           onClick={() => window.dispatchEvent(new CustomEvent('openSettings'))}
-          className="w-14 h-14 rounded-full flex items-center justify-center shadow-lg transition-colors"
+          className="w-12 h-12 sm:w-14 sm:h-14 rounded-full flex items-center justify-center shadow-lg transition-colors"
           style={{
             background: `${settings.accentColor}30`,
             border: `1px solid ${settings.accentColor}`,
           }}
         >
-          <Settings className="w-6 h-6" style={{ color: settings.textColor }} />
+          <Settings className="w-5 h-5 sm:w-6 sm:h-6" style={{ color: settings.textColor }} />
         </motion.button>
       </motion.div>
 
