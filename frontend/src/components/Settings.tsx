@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Palette, Settings as SettingsIcon, CloudSun, Search, Download, Upload, RotateCcw, Sun, Moon, Monitor, User, Clock } from 'lucide-react';
+import { X, Palette, Settings as SettingsIcon, CloudSun, Search, Download, Upload, RotateCcw, Sun, Moon, Monitor, User, Clock, Link, Lock } from 'lucide-react';
 import { useSettingsStore, themePresets } from '../stores/useSettingsStore';
+import { useAppStore } from '../stores/useAppStore';
+import { authApi, getAuthToken, getAuthHeaders } from '../services/api';
 
 type TabType = 'appearance' | 'features' | 'backup';
 
@@ -220,56 +222,277 @@ function FeaturesSettings({ settings, setSettings }: { settings: any; setSetting
 }
 
 function BackupSettings({ settings, resetSettings }: { settings: any; resetSettings: () => void }) {
-  const handleExport = () => {
+  const { appGroups, bookmarks, fetchApps, fetchBookmarks } = useAppStore();
+  const [showPasswordDialog, setShowPasswordDialog] = useState(false);
+  const [password, setPassword] = useState('');
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+  const [importing, setImporting] = useState(false);
+
+  // 导出主题配置（排除 searchHistory）
+  const handleExportTheme = () => {
     const data = localStorage.getItem('newtab-settings');
     if (data) {
-      const blob = new Blob([data], { type: 'application/json' });
+      const parsed = JSON.parse(data);
+      if (parsed.state?.settings) {
+        delete parsed.state.settings.searchHistory;
+      }
+      const blob = new Blob([JSON.stringify(parsed, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = 'newtab-settings.json';
+      a.download = 'newtab-theme.json';
       a.click();
+      URL.revokeObjectURL(url);
     }
   };
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+
+  // 导入主题配置
+  const handleImportTheme = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
           const data = JSON.parse(event.target?.result as string);
+          // 保留当前的 searchHistory
+          const current = localStorage.getItem('newtab-settings');
+          if (current) {
+            const currentParsed = JSON.parse(current);
+            if (currentParsed.state?.settings?.searchHistory && data.state?.settings) {
+              data.state.settings.searchHistory = currentParsed.state.settings.searchHistory;
+            }
+          }
           localStorage.setItem('newtab-settings', JSON.stringify(data));
           window.location.reload();
         } catch { alert('导入失败'); }
       };
       reader.readAsText(file);
     }
+    e.target.value = '';
   };
+
+  // 导出链接数据
+  const handleExportLinks = () => {
+    const data = {
+      appGroups,
+      bookmarks,
+      exportedAt: new Date().toISOString(),
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'newtab-links.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // 导入链接数据（需要密码）
+  const handleImportLinksClick = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+
+    // 检查是否需要密码
+    const required = await authApi.isPasswordRequired();
+    const token = getAuthToken();
+
+    if (required && !token) {
+      setPendingFile(file);
+      setShowPasswordDialog(true);
+    } else {
+      await importLinksData(file);
+    }
+  };
+
+  const importLinksData = async (file: File) => {
+    setImporting(true);
+    try {
+      const text = await file.text();
+      const data = JSON.parse(text);
+
+      if (!data.appGroups && !data.bookmarks) {
+        throw new Error('无效的链接数据格式');
+      }
+
+      const headers = {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      };
+
+      // 导入 apps
+      if (data.appGroups) {
+        await fetch('/api/apps', {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({ appGroups: data.appGroups }),
+        });
+      }
+
+      // 导入 bookmarks
+      if (data.bookmarks) {
+        await fetch('/api/links', {
+          method: 'PUT',
+          headers,
+          body: JSON.stringify({ bookmarks: data.bookmarks }),
+        });
+      }
+
+      // 刷新数据
+      await fetchApps();
+      await fetchBookmarks();
+      alert('链接数据导入成功');
+    } catch (err) {
+      alert('导入失败: ' + (err instanceof Error ? err.message : '未知错误'));
+    } finally {
+      setImporting(false);
+      setShowPasswordDialog(false);
+      setPendingFile(null);
+      setPassword('');
+    }
+  };
+
+  const handlePasswordSubmit = async () => {
+    if (!pendingFile) return;
+
+    try {
+      const result = await authApi.verifyPassword(password);
+      if (result) {
+        // 密码验证成功后，authApi.verifyPassword 会返回 token
+        // 需要重新获取 token
+        const res = await fetch('/api/auth/verify', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password }),
+        });
+        const data = await res.json();
+        if (data.token) {
+          localStorage.setItem('newtab-auth-token', data.token);
+        }
+        await importLinksData(pendingFile);
+      } else {
+        alert('密码错误');
+      }
+    } catch {
+      alert('验证失败');
+    }
+  };
+
   return (
     <div className="space-y-6">
-      <h3 className="font-medium mb-3" style={{ color: settings.textColor }}>数据管理</h3>
-      <div className="space-y-3">
+      {/* 主题配置 */}
+      <div>
+        <h3 className="font-medium mb-3 flex items-center gap-2" style={{ color: settings.textColor }}>
+          <Palette className="w-4 h-4" style={{ color: settings.accentColor }} />
+          主题配置
+        </h3>
+        <div className="space-y-3">
+          <button
+            onClick={handleExportTheme}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors hover:opacity-80"
+            style={{ background: `${settings.accentColor}20`, color: settings.textColor }}
+          >
+            <Download className="w-5 h-5" />导出主题
+          </button>
+          <label
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-colors hover:opacity-80"
+            style={{ background: `${settings.accentColor}20`, color: settings.textColor }}
+          >
+            <Upload className="w-5 h-5" />导入主题
+            <input type="file" accept=".json" onChange={handleImportTheme} className="hidden" />
+          </label>
+        </div>
+      </div>
+
+      {/* 链接数据 */}
+      <div>
+        <h3 className="font-medium mb-3 flex items-center gap-2" style={{ color: settings.textColor }}>
+          <Link className="w-4 h-4" style={{ color: settings.accentColor }} />
+          链接数据
+        </h3>
+        <div className="space-y-3">
+          <button
+            onClick={handleExportLinks}
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors hover:opacity-80"
+            style={{ background: `${settings.accentColor}20`, color: settings.textColor }}
+          >
+            <Download className="w-5 h-5" />导出链接
+          </button>
+          <label
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-colors hover:opacity-80"
+            style={{ background: `${settings.accentColor}20`, color: settings.textColor }}
+          >
+            <Upload className="w-5 h-5" />
+            <Lock className="w-4 h-4" style={{ color: settings.accentColor }} />
+            导入链接
+            <input type="file" accept=".json" onChange={handleImportLinksClick} className="hidden" disabled={importing} />
+          </label>
+        </div>
+      </div>
+
+      {/* 重置 */}
+      <div>
         <button
-          onClick={handleExport}
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors hover:opacity-80"
-          style={{ background: `${settings.accentColor}20`, color: settings.textColor }}
-        >
-          <Download className="w-5 h-5" />导出配置
-        </button>
-        <label
-          className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg cursor-pointer transition-colors hover:opacity-80"
-          style={{ background: `${settings.accentColor}20`, color: settings.textColor }}
-        >
-          <Upload className="w-5 h-5" />导入配置
-          <input type="file" accept=".json" onChange={handleImport} className="hidden" />
-        </label>
-        <button
-          onClick={() => { if (confirm('确定重置?')) { resetSettings(); window.location.reload(); }}}
+          onClick={() => { if (confirm('确定重置所有设置?')) { resetSettings(); window.location.reload(); }}}
           className="w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400"
         >
           <RotateCcw className="w-5 h-5" />重置设置
         </button>
       </div>
+
+      {/* 密码弹窗 */}
+      <AnimatePresence>
+        {showPasswordDialog && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[60] flex items-center justify-center p-4"
+            onClick={() => { setShowPasswordDialog(false); setPendingFile(null); setPassword(''); }}
+          >
+            <motion.div
+              initial={{ scale: 0.9 }}
+              animate={{ scale: 1 }}
+              exit={{ scale: 0.9 }}
+              className="rounded-2xl p-6 w-full max-w-sm"
+              style={{ background: settings.backgroundColor, border: `1px solid ${settings.accentColor}40` }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2" style={{ color: settings.textColor }}>
+                <Lock className="w-5 h-5" style={{ color: settings.accentColor }} />
+                需要密码验证
+              </h3>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+                className="w-full px-4 py-2 rounded-lg mb-4"
+                style={{ background: `${settings.accentColor}20`, border: `1px solid ${settings.accentColor}40`, color: settings.textColor }}
+                placeholder="输入编辑密码"
+                autoFocus
+              />
+              <div className="flex gap-3">
+                <button
+                  onClick={() => { setShowPasswordDialog(false); setPendingFile(null); setPassword(''); }}
+                  className="flex-1 px-4 py-2 rounded-lg transition-colors hover:opacity-80"
+                  style={{ background: `${settings.accentColor}20`, color: settings.textColor }}
+                >
+                  取消
+                </button>
+                <button
+                  onClick={handlePasswordSubmit}
+                  disabled={importing}
+                  className="flex-1 px-4 py-2 rounded-lg transition-colors hover:opacity-80"
+                  style={{ background: settings.accentColor, color: settings.backgroundColor }}
+                >
+                  {importing ? '导入中...' : '确认'}
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
