@@ -1,5 +1,5 @@
 import express from 'express';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { requireAuth } from '../middleware/auth.js';
@@ -17,6 +17,10 @@ const readData = () => {
 };
 
 const writeData = (data) => {
+  const dir = dirname(DATA_PATH);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
   writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
 };
 
@@ -31,10 +35,13 @@ linksRouter.get('/', (req, res) => {
 });
 
 // Update all bookmarks
-linksRouter.put('/', (req, res) => {
+linksRouter.put('/', requireAuth, (req, res) => {
   try {
     const data = req.body;
-    writeData(data);
+    if (!data || !Array.isArray(data.bookmarks)) {
+      return res.status(400).json({ error: 'Invalid bookmarks payload' });
+    }
+    writeData({ bookmarks: data.bookmarks });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update links data' });

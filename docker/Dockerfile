@@ -16,6 +16,7 @@ RUN apk add --no-cache nginx
 COPY backend/package.json ./
 RUN npm install --production
 COPY backend/src ./src
+COPY backend/data ./data
 
 # Copy frontend build
 COPY --from=frontend-builder /app/frontend/dist /usr/share/nginx/html

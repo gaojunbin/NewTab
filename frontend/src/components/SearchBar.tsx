@@ -1,91 +1,177 @@
-import { useState, useRef, useEffect, useCallback } from 'react';
+import { useState, useRef, useEffect, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, X, Clock, ArrowRight, ChevronDown, Trash2 } from 'lucide-react';
+import { Search, X, Clock, ArrowUpRight, ChevronDown, Trash2, Sparkles, Compass } from 'lucide-react';
 import { Icon } from '@iconify/react';
 import { useAppStore } from '../stores/useAppStore';
-import { useSettingsStore } from '../stores/useSettingsStore';
-import { searchApi } from '../services/api';
+import { useSettingsStore, rgba, isColorDark } from '../stores/useSettingsStore';
+import { searchApi, normalizeUrl, extractDomain } from '../services/api';
 
-const searchEngines = [
+export const searchEngines = [
   { id: 'google', name: 'Google', icon: 'logos:google-icon', url: 'https://www.google.com/search?q=', home: 'https://www.google.com', prefix: '/g' },
+  { id: 'bing', name: 'Bing', icon: 'logos:bing', url: 'https://www.bing.com/search?q=', home: 'https://www.bing.com', prefix: '/bi' },
+  { id: 'baidu', name: 'Baidu', icon: 'simple-icons:baidu', url: 'https://www.baidu.com/s?wd=', home: 'https://www.baidu.com', prefix: '/bd' },
   { id: 'github', name: 'GitHub', icon: 'mdi:github', url: 'https://github.com/search?q=', home: 'https://github.com', prefix: '/gh' },
   { id: 'youtube', name: 'YouTube', icon: 'logos:youtube-icon', url: 'https://www.youtube.com/results?search_query=', home: 'https://www.youtube.com', prefix: '/y' },
+  { id: 'chatgpt', name: 'ChatGPT', icon: 'simple-icons:openai', url: 'https://chatgpt.com/?q=', home: 'https://chatgpt.com', prefix: '/ai' },
+  { id: 'perplexity', name: 'Perplexity', icon: 'simple-icons:perplexity', url: 'https://www.perplexity.ai/search?q=', home: 'https://www.perplexity.ai', prefix: '/p' },
   { id: 'nodeseek', name: 'NodeSeek', icon: 'mdi:server-network', url: 'https://www.nodeseek.com/search?q=', home: 'https://www.nodeseek.com', prefix: '/ns' },
   { id: 'linux.do', name: 'Linux.do', icon: 'mdi:linux', url: 'https://linux.do/search?q=', home: 'https://linux.do', prefix: '/ld' },
 ];
 
-// Special filter option for in-app filtering
-const filterOption = { id: 'filter', name: 'JunbinUniverse', icon: 'mdi:filter-outline' };
+const filterOption = { id: 'filter', name: 'JunbinUniverse', icon: 'mdi:filter-variant', prefix: '/f' };
 
-const engineIcons: Record<string, string> = Object.fromEntries(searchEngines.map(e => [e.id, e.icon]));
-const searchUrls: Record<string, string> = Object.fromEntries(searchEngines.map(e => [e.id, e.url]));
-const homeUrls: Record<string, string> = Object.fromEntries(searchEngines.map(e => [e.id, e.home]));
+const engineIcons: Record<string, string> = Object.fromEntries(searchEngines.map((e) => [e.id, e.icon]));
+const searchUrls: Record<string, string> = Object.fromEntries(searchEngines.map((e) => [e.id, e.url]));
+const homeUrls: Record<string, string> = Object.fromEntries(searchEngines.map((e) => [e.id, e.home]));
 
 interface SearchBarProps {
-  onFilterChange?: (query: string) => void;  // Kept for compatibility
+  onFilterChange?: (query: string) => void;
   onFilterModeChange?: (active: boolean, query: string) => void;
+  onOpenCommandPalette?: () => void;
 }
 
-function SearchBar({ onFilterModeChange }: SearchBarProps) {
-  const { providers } = useAppStore();
-  const { settings, addSearchHistory, removeSearchHistory, clearSearchHistory } = useSettingsStore();
+interface QuickMatchItem {
+  id: string;
+  name: string;
+  url: string;
+  category: string;
+  icon?: string;
+  kind: 'app' | 'bookmark';
+}
+
+function SearchBar({ onFilterModeChange, onOpenCommandPalette }: SearchBarProps) {
+  const { appGroups, bookmarks, providers } = useAppStore();
+  const { settings, setSettings, addSearchHistory, removeSearchHistory, clearSearchHistory } = useSettingsStore();
   const [query, setQuery] = useState('');
-  const [activeEngine, setActiveEngine] = useState('google');
+  const [activeEngine, setActiveEngine] = useState(() =>
+    searchEngines.some((e) => e.id === settings.defaultSearchEngine)
+      ? settings.defaultSearchEngine
+      : 'google'
+  );
+  const [isFocused, setIsFocused] = useState(false);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [showEngineDropdown, setShowEngineDropdown] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>([]);
   const [selectedIndex, setSelectedIndex] = useState(-1);
-  const [hoveredEngine, setHoveredEngine] = useState<string | null>(null);
   const [hoveredHistory, setHoveredHistory] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const engineDropdownRef = useRef<HTMLDivElement>(null);
 
-  // Handle prefix commands
+  // Sync activeEngine when settings.defaultSearchEngine changes
+  useEffect(() => {
+    if (settings.defaultSearchEngine && searchEngines.some((e) => e.id === settings.defaultSearchEngine)) {
+      setActiveEngine(settings.defaultSearchEngine);
+    }
+  }, [settings.defaultSearchEngine]);
+
+  // Handle prefix commands (/g, /bi, /bd, /gh, /y, /ai, /p, /ns, /ld, /f)
   useEffect(() => {
     if (query.startsWith('/')) {
       const parts = query.split(' ');
-      const prefix = parts[0];
+      const prefix = parts[0].toLowerCase();
 
-      // Check for filter mode - /f or /filter triggers immediately
       if (prefix === '/f' || prefix === '/filter') {
         const filterQuery = parts.length > 1 ? parts.slice(1).join(' ') : '';
-        setQuery(''); // Clear the main search bar
+        setQuery('');
+        setShowSuggestions(false);
         onFilterModeChange?.(true, filterQuery);
         return;
       }
 
-      const provider = providers.find((p) => p.prefix === prefix);
-      if (provider && parts.length > 1) {
-        setActiveEngine(provider.name.toLowerCase());
-        setQuery(parts.slice(1).join(' '));
+      if (parts.length > 1) {
+        const matchedEngine = searchEngines.find((e) => e.prefix === prefix);
+        if (matchedEngine) {
+          setActiveEngine(matchedEngine.id);
+          setQuery(parts.slice(1).join(' '));
+          return;
+        }
+
+        const provider = providers.find((p) => p.prefix.toLowerCase() === prefix);
+        if (provider) {
+          const normalized = provider.name.toLowerCase();
+          const byName = searchEngines.find(
+            (e) => e.id === normalized || normalized.includes(e.id)
+          );
+          if (byName) {
+            setActiveEngine(byName.id);
+            setQuery(parts.slice(1).join(' '));
+          }
+        }
       }
     }
   }, [query, providers, onFilterModeChange]);
 
-  // Fetch suggestions
-  useEffect(() => {
+  // Instant local matches across Apps and Bookmarks
+  const quickMatches = useMemo<QuickMatchItem[]>(() => {
+    const trimmed = query.trim().toLowerCase();
+    if (!trimmed || trimmed.startsWith('/')) return [];
 
+    const results: QuickMatchItem[] = [];
+    for (const group of appGroups) {
+      for (const app of group.apps) {
+        if (
+          app.name.toLowerCase().includes(trimmed) ||
+          app.url.toLowerCase().includes(trimmed)
+        ) {
+          results.push({
+            id: `app-${app.id}`,
+            name: app.name,
+            url: normalizeUrl(app.url),
+            category: group.category,
+            icon: app.icon,
+            kind: 'app',
+          });
+        }
+      }
+    }
+    for (const cat of bookmarks) {
+      for (const link of cat.links) {
+        if (
+          link.name.toLowerCase().includes(trimmed) ||
+          link.url.toLowerCase().includes(trimmed)
+        ) {
+          results.push({
+            id: `bm-${link.id}`,
+            name: link.name,
+            url: normalizeUrl(link.url),
+            category: cat.category,
+            kind: 'bookmark',
+          });
+        }
+      }
+    }
+    return results.slice(0, 4);
+  }, [query, appGroups, bookmarks]);
+
+  // Fetch web suggestions
+  useEffect(() => {
     const fetchSuggestions = async () => {
-      if (query.length < 2 || query.startsWith('/')) {
+      if (query.trim().length < 2 || query.startsWith('/')) {
         setSuggestions([]);
         return;
       }
       try {
-        const results = await searchApi.getSuggestions(query, activeEngine);
-        setSuggestions(results.slice(0, 8));
+        const results = await searchApi.getSuggestions(query.trim(), activeEngine);
+        setSuggestions(results.slice(0, 6));
       } catch {
         setSuggestions([]);
       }
     };
 
-    const debounce = setTimeout(fetchSuggestions, 300);
+    const debounce = setTimeout(fetchSuggestions, 220);
     return () => clearTimeout(debounce);
   }, [query, activeEngine]);
 
+  const historyMatches = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return settings.searchHistory
+      .filter((h) => h.toLowerCase().includes(q))
+      .slice(0, 3);
+  }, [settings.searchHistory, query]);
+
   const handleSearch = useCallback(
     (searchQuery: string = query) => {
-      // If empty query, open homepage
       if (!searchQuery.trim()) {
         const homeUrl = homeUrls[activeEngine] || homeUrls.google;
         window.open(homeUrl, '_blank');
@@ -93,51 +179,74 @@ function SearchBar({ onFilterModeChange }: SearchBarProps) {
       }
 
       const url = searchUrls[activeEngine] || searchUrls.google;
-      addSearchHistory(searchQuery);
-      window.open(url + encodeURIComponent(searchQuery), '_blank');
+      addSearchHistory(searchQuery.trim());
+      window.open(url + encodeURIComponent(searchQuery.trim()), '_blank');
       setQuery('');
       setShowSuggestions(false);
     },
     [query, activeEngine, addSearchHistory]
   );
 
+  // Unified navigable items list: [quickMatches, historyMatches, suggestions]
+  const navigableItems = useMemo(() => {
+    const items: Array<{ type: 'quick'; item: QuickMatchItem } | { type: 'query'; value: string }> = [];
+    for (const qm of quickMatches) {
+      items.push({ type: 'quick', item: qm });
+    }
+    for (const hm of historyMatches) {
+      items.push({ type: 'query', value: hm });
+    }
+    for (const sg of suggestions) {
+      items.push({ type: 'query', value: sg });
+    }
+    return items;
+  }, [quickMatches, historyMatches, suggestions]);
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
-    const totalItems = suggestions.length + settings.searchHistory.filter(h => h.includes(query)).slice(0, 3).length;
+    const totalItems = navigableItems.length;
 
     switch (e.key) {
       case 'Enter':
-        if (selectedIndex >= 0) {
-          const allItems = [
-            ...settings.searchHistory.filter(h => h.includes(query)).slice(0, 3),
-            ...suggestions,
-          ];
-          handleSearch(allItems[selectedIndex]);
+        if (selectedIndex >= 0 && selectedIndex < totalItems) {
+          const target = navigableItems[selectedIndex];
+          if (target.type === 'quick') {
+            window.open(target.item.url, '_blank');
+            setQuery('');
+            setShowSuggestions(false);
+          } else {
+            handleSearch(target.value);
+          }
         } else {
           handleSearch();
         }
         break;
       case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev < totalItems - 1 ? prev + 1 : 0));
+        if (totalItems > 0) {
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev < totalItems - 1 ? prev + 1 : 0));
+        }
         break;
       case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : totalItems - 1));
+        if (totalItems > 0) {
+          e.preventDefault();
+          setSelectedIndex((prev) => (prev > 0 ? prev - 1 : totalItems - 1));
+        }
         break;
       case 'Escape':
         setShowSuggestions(false);
         setSelectedIndex(-1);
+        inputRef.current?.blur();
         break;
       case 'Tab':
-        e.preventDefault();
         if (suggestions[0]) {
+          e.preventDefault();
           setQuery(suggestions[0]);
         }
         break;
     }
   };
 
-  // Close suggestions and engine dropdown on click outside
+  // Close dropdowns on outside click
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (containerRef.current && !containerRef.current.contains(e.target as Node)) {
@@ -151,46 +260,83 @@ function SearchBar({ onFilterModeChange }: SearchBarProps) {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Focus on space key
+  // Safe "/" shortcut to focus search when not typing in an input
   useEffect(() => {
-    const handleSpace = (e: KeyboardEvent) => {
-      if (e.code === 'Space' && !['INPUT', 'TEXTAREA'].includes((e.target as HTMLElement).tagName)) {
-        e.preventDefault();
-        inputRef.current?.focus();
+    const handleSlashKey = (e: KeyboardEvent) => {
+      if (
+        e.key === '/' &&
+        !e.metaKey &&
+        !e.ctrlKey &&
+        !e.altKey &&
+        !['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement)?.tagName)
+      ) {
+        const rect = containerRef.current?.getBoundingClientRect();
+        if (rect && rect.top >= 0 && rect.bottom <= window.innerHeight) {
+          e.preventDefault();
+          inputRef.current?.focus();
+        }
       }
     };
-    window.addEventListener('keydown', handleSpace);
-    return () => window.removeEventListener('keydown', handleSpace);
+    window.addEventListener('keydown', handleSlashKey);
+    return () => window.removeEventListener('keydown', handleSlashKey);
   }, []);
 
-  const historyMatches = settings.searchHistory.filter((h) =>
-    h.toLowerCase().includes(query.toLowerCase())
-  ).slice(0, 3);
+  const dark = isColorDark(settings.backgroundColor);
+  const currentEngineObj = searchEngines.find((e) => e.id === activeEngine) || searchEngines[0];
 
   return (
-    <div ref={containerRef} className="relative">
-      {/* Search Input - Glass style like original */}
-      <div
-        className="rounded-2xl backdrop-blur-[12px] transition-all duration-300"
+    <div ref={containerRef} className="relative w-full">
+      {/* Main Search Capsule */}
+      <motion.div
+        animate={{
+          scale: isFocused ? 1.005 : 1,
+        }}
+        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+        className="rounded-2xl backdrop-blur-2xl transition-all duration-300"
         style={{
-          background: settings.theme === 'dark'
-            ? 'rgba(255, 255, 255, 0.08)'
-            : 'rgba(0, 0, 0, 0.04)',
-          border: `1px solid ${settings.theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)'}`,
+          background: dark
+            ? rgba('#ffffff', isFocused ? 0.09 : 0.06)
+            : rgba('#ffffff', isFocused ? 0.88 : 0.72),
+          border: `1px solid ${rgba(settings.textColor, isFocused ? 0.18 : 0.09)}`,
+          boxShadow: isFocused
+            ? `0 12px 36px -8px ${rgba('#000000', dark ? 0.45 : 0.09)}, 0 0 0 3px ${rgba(settings.textColor, 0.04)}`
+            : `0 4px 20px -4px ${rgba('#000000', dark ? 0.28 : 0.05)}`,
         }}
       >
-        <div className="flex items-center px-4 py-3 sm:px-6 sm:py-4">
-          {/* Search Engine Selector */}
+        <div className="flex items-center px-3 sm:px-4 py-2.5 sm:py-3 gap-2">
+          {/* Search Engine Pill Selector */}
           <button
+            type="button"
             onClick={() => setShowEngineDropdown(!showEngineDropdown)}
-            className="flex items-center gap-1 px-3 py-1.5 rounded-lg hover:opacity-80 transition-opacity mr-2"
-            style={{ backgroundColor: `${settings.accentColor}20` }}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl transition-all duration-200 hover:opacity-90 active:scale-95"
+            style={{
+              background: rgba(settings.textColor, 0.055),
+              border: `1px solid ${rgba(settings.textColor, 0.06)}`,
+            }}
+            title={`Current: ${currentEngineObj.name} (${currentEngineObj.prefix})`}
           >
-            <Icon icon={engineIcons[activeEngine] || 'mdi:search'} className="w-6 h-6" />
-            <ChevronDown className="w-3 h-3" style={{ color: settings.accentColor }} />
+            <Icon
+              icon={engineIcons[activeEngine] || 'mdi:magnify'}
+              className="w-4 h-4 sm:w-5 sm:h-5"
+              style={
+                ['github', 'baidu', 'chatgpt', 'perplexity', 'nodeseek', 'linux.do'].includes(activeEngine)
+                  ? { color: settings.textColor }
+                  : undefined
+              }
+            />
+            <span
+              className="hidden sm:inline text-xs font-medium tracking-tight"
+              style={{ color: settings.textColor, opacity: 0.85 }}
+            >
+              {currentEngineObj.name}
+            </span>
+            <ChevronDown
+              className={`w-3.5 h-3.5 transition-transform duration-200 ${showEngineDropdown ? 'rotate-180' : ''}`}
+              style={{ color: settings.accentColor }}
+            />
           </button>
 
-          {/* Input */}
+          {/* Search Input */}
           <input
             ref={inputRef}
             type="text"
@@ -200,187 +346,355 @@ function SearchBar({ onFilterModeChange }: SearchBarProps) {
               setShowSuggestions(true);
               setSelectedIndex(-1);
             }}
-            onFocus={() => setShowSuggestions(true)}
+            onFocus={() => {
+              setIsFocused(true);
+              setShowSuggestions(true);
+            }}
+            onBlur={() => setIsFocused(false)}
             onKeyDown={handleKeyDown}
-            placeholder={`Search in ${searchEngines.find(e => e.id === activeEngine)?.name || 'Google'}`}
-            className="flex-1 bg-transparent text-base sm:text-xl focus:outline-none"
+            placeholder={`Search ${currentEngineObj.name} or type /f to filter...`}
+            className="flex-1 bg-transparent text-sm sm:text-base font-normal focus:outline-none placeholder:opacity-45"
             style={{ color: settings.textColor }}
-            autoFocus
           />
 
-          {/* Clear / Search Button */}
-          {query && (
-            <button
-              onClick={() => setQuery('')}
-              className="p-2 rounded-lg transition-colors hover:opacity-70"
-            >
-              <X className="w-6 h-6" style={{ color: settings.accentColor }} />
-            </button>
-          )}
-          <button
-            onClick={() => handleSearch()}
-            className="p-2 ml-1 rounded-lg transition-colors"
-            style={{ backgroundColor: `${settings.accentColor}20` }}
-          >
-            <Search className="w-6 h-6" style={{ color: settings.textColor }} />
-          </button>
-        </div>
-      </div>
+          {/* Right Controls: Clear, Command Palette Hint, Search Button */}
+          <div className="flex items-center gap-1.5">
+            {query ? (
+              <button
+                type="button"
+                onClick={() => {
+                  setQuery('');
+                  inputRef.current?.focus();
+                }}
+                className="p-1.5 rounded-lg transition-opacity hover:opacity-75"
+                title="Clear"
+              >
+                <X className="w-4 h-4" style={{ color: settings.accentColor }} />
+              </button>
+            ) : (
+              onOpenCommandPalette && (
+                <button
+                  type="button"
+                  onClick={onOpenCommandPalette}
+                  className="hidden sm:inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-mono transition-opacity opacity-50 hover:opacity-90"
+                  style={{
+                    background: rgba(settings.textColor, 0.05),
+                    border: `1px solid ${rgba(settings.textColor, 0.08)}`,
+                    color: settings.textColor,
+                  }}
+                  title="Open Command Palette (⌘K)"
+                >
+                  <span>⌘K</span>
+                </button>
+              )
+            )}
 
-      {/* Engine Dropdown - Outside search box to avoid overflow clipping */}
+            <button
+              type="button"
+              onClick={() => handleSearch()}
+              className="p-2 rounded-xl transition-all duration-200 hover:opacity-90 active:scale-95"
+              style={{
+                background: query.trim() ? settings.textColor : rgba(settings.textColor, 0.06),
+                color: query.trim() ? settings.backgroundColor : settings.textColor,
+              }}
+              title="Search"
+            >
+              <Search className="w-4 h-4 sm:w-4.5 sm:h-4.5" />
+            </button>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Engine Dropdown Menu */}
       <AnimatePresence>
         {showEngineDropdown && (
           <motion.div
             ref={engineDropdownRef}
-            initial={{ opacity: 0, y: -5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            className="absolute left-0 sm:left-4 bottom-full mb-2 sm:bottom-auto sm:mb-0 sm:top-16 py-2 rounded-xl z-50 min-w-[140px] sm:min-w-[160px] max-h-[50vh] sm:max-h-[60vh] overflow-y-auto overscroll-contain"
+            initial={{ opacity: 0, y: -6, scale: 0.98 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.98 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute left-0 top-full mt-2 py-1.5 rounded-2xl z-50 min-w-[200px] max-h-[65vh] overflow-y-auto backdrop-blur-2xl"
             style={{
-              background: settings.backgroundColor,
-              border: `1px solid ${settings.accentColor}40`,
-              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+              background: dark ? rgba('#18181b', 0.94) : rgba('#ffffff', 0.95),
+              border: `1px solid ${rgba(settings.textColor, 0.12)}`,
+              boxShadow: `0 16px 40px -8px ${rgba('#000000', dark ? 0.55 : 0.15)}`,
             }}
           >
-            {searchEngines.map((engine) => (
-              <button
-                key={engine.id}
-                onClick={() => {
-                  setActiveEngine(engine.id);
-                  setShowEngineDropdown(false);
-                }}
-                onMouseEnter={() => setHoveredEngine(engine.id)}
-                onMouseLeave={() => setHoveredEngine(null)}
-                className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors duration-150"
-                style={{
-                  backgroundColor: activeEngine === engine.id
-                    ? `${settings.accentColor}30`
-                    : hoveredEngine === engine.id
-                      ? `${settings.accentColor}15`
-                      : 'transparent',
-                }}
-              >
-                <Icon icon={engine.icon} className="w-5 h-5" />
-                <span className="text-sm" style={{ color: settings.textColor }}>{engine.name}</span>
-                <span className="ml-auto text-xs opacity-60" style={{ color: settings.textColor }}>{engine.prefix}</span>
-                {activeEngine === engine.id && (
-                  <span className="text-xs" style={{ color: settings.accentColor }}>✓</span>
-                )}
-              </button>
-            ))}
-            {/* Divider */}
-            <div className="mx-3 my-1 border-t" style={{ borderColor: `${settings.accentColor}30` }} />
-            {/* Filter option */}
+            <div className="px-3 py-1 text-[10px] font-medium uppercase tracking-wider opacity-50" style={{ color: settings.textColor }}>
+              Search Engines
+            </div>
+            {searchEngines.map((engine) => {
+              const isSelected = activeEngine === engine.id;
+              return (
+                <button
+                  key={engine.id}
+                  type="button"
+                  onClick={() => {
+                    setActiveEngine(engine.id);
+                    setSettings({ defaultSearchEngine: engine.id });
+                    setShowEngineDropdown(false);
+                    inputRef.current?.focus();
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3.5 py-2 text-left transition-colors duration-150"
+                  style={{
+                    backgroundColor: isSelected ? rgba(settings.textColor, 0.08) : 'transparent',
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!isSelected) e.currentTarget.style.backgroundColor = rgba(settings.textColor, 0.04);
+                  }}
+                  onMouseLeave={(e) => {
+                    if (!isSelected) e.currentTarget.style.backgroundColor = 'transparent';
+                  }}
+                >
+                  <Icon
+                    icon={engine.icon}
+                    className="w-4 h-4 flex-shrink-0"
+                    style={
+                      ['github', 'baidu', 'chatgpt', 'perplexity', 'nodeseek', 'linux.do'].includes(engine.id)
+                        ? { color: settings.textColor }
+                        : undefined
+                    }
+                  />
+                  <span className="text-xs sm:text-sm font-medium" style={{ color: settings.textColor }}>
+                    {engine.name}
+                  </span>
+                  <span
+                    className="ml-auto text-[11px] font-mono px-1.5 py-0.5 rounded opacity-55"
+                    style={{
+                      background: rgba(settings.textColor, 0.05),
+                      color: settings.textColor,
+                    }}
+                  >
+                    {engine.prefix}
+                  </span>
+                </button>
+              );
+            })}
+
+            <div className="mx-3 my-1.5 border-t" style={{ borderColor: rgba(settings.textColor, 0.08) }} />
+
             <button
+              type="button"
               onClick={() => {
                 setShowEngineDropdown(false);
                 onFilterModeChange?.(true, '');
               }}
-              onMouseEnter={() => setHoveredEngine(filterOption.id)}
-              onMouseLeave={() => setHoveredEngine(null)}
-              className="w-full flex items-center gap-3 px-4 py-2.5 transition-colors duration-150"
-              style={{
-                backgroundColor: hoveredEngine === filterOption.id
-                  ? `${settings.accentColor}15`
-                  : 'transparent',
+              className="w-full flex items-center gap-2.5 px-3.5 py-2 text-left transition-colors duration-150"
+              onMouseEnter={(e) => {
+                e.currentTarget.style.backgroundColor = rgba(settings.textColor, 0.05);
+              }}
+              onMouseLeave={(e) => {
+                e.currentTarget.style.backgroundColor = 'transparent';
               }}
             >
-              <Icon icon={filterOption.icon} className="w-5 h-5" />
-              <span className="text-sm" style={{ color: settings.textColor }}>{filterOption.name}</span>
-              <span className="ml-auto text-xs opacity-60" style={{ color: settings.textColor }}>/f</span>
+              <Icon icon={filterOption.icon} className="w-4 h-4" style={{ color: settings.textColor }} />
+              <span className="text-xs sm:text-sm font-medium" style={{ color: settings.textColor }}>
+                {filterOption.name}
+              </span>
+              <span
+                className="ml-auto text-[11px] font-mono px-1.5 py-0.5 rounded opacity-55"
+                style={{
+                  background: rgba(settings.textColor, 0.05),
+                  color: settings.textColor,
+                }}
+              >
+                {filterOption.prefix}
+              </span>
             </button>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Suggestions Dropdown */}
+      {/* Suggestions & Quick Launch Dropdown */}
       <AnimatePresence>
-        {showSuggestions && (query || historyMatches.length > 0) && (
+        {showSuggestions && (quickMatches.length > 0 || historyMatches.length > 0 || suggestions.length > 0) && (
           <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -10 }}
-            className="absolute top-full left-0 right-0 mt-2 rounded-xl overflow-hidden z-40 backdrop-blur-[12px]"
+            initial={{ opacity: 0, y: -6, scale: 0.99 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.99 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="absolute top-full left-0 right-0 mt-2 rounded-2xl overflow-hidden z-40 backdrop-blur-2xl"
             style={{
-              background: settings.theme === 'dark'
-                ? 'rgba(255, 255, 255, 0.1)'
-                : 'rgba(0, 0, 0, 0.05)',
-              border: `1px solid ${settings.theme === 'dark' ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)'}`,
+              background: dark ? rgba('#18181b', 0.92) : rgba('#ffffff', 0.94),
+              border: `1px solid ${rgba(settings.textColor, 0.11)}`,
+              boxShadow: `0 20px 48px -12px ${rgba('#000000', dark ? 0.55 : 0.14)}`,
             }}
           >
-            {/* History */}
+            {/* 1. Quick Launch (Instant Local Apps & Bookmarks) */}
+            {quickMatches.length > 0 && (
+              <div
+                className="p-2"
+                style={{
+                  borderBottom:
+                    historyMatches.length > 0 || suggestions.length > 0
+                      ? `1px solid ${rgba(settings.textColor, 0.07)}`
+                      : undefined,
+                }}
+              >
+                <div className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium opacity-55" style={{ color: settings.textColor }}>
+                  <Compass className="w-3 h-3" />
+                  <span>Quick Launch</span>
+                </div>
+                {quickMatches.map((item, idx) => {
+                  const isSelected = selectedIndex === idx;
+                  return (
+                    <button
+                      key={item.id}
+                      type="button"
+                      onClick={() => {
+                        window.open(item.url, '_blank');
+                        setQuery('');
+                        setShowSuggestions(false);
+                      }}
+                      onMouseEnter={() => setSelectedIndex(idx)}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors text-left"
+                      style={{
+                        backgroundColor: isSelected ? rgba(settings.textColor, 0.08) : 'transparent',
+                      }}
+                    >
+                      <div
+                        className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                        style={{ background: rgba(settings.textColor, 0.06) }}
+                      >
+                        <Icon
+                          icon={
+                            item.icon
+                              ? item.icon.includes(':')
+                                ? item.icon
+                                : `mdi:${item.icon}`
+                              : 'mdi:bookmark-outline'
+                          }
+                          className="w-4 h-4"
+                          style={{ color: settings.textColor }}
+                        />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="text-sm font-medium truncate" style={{ color: settings.textColor }}>
+                            {item.name}
+                          </span>
+                          <span
+                            className="text-[10px] px-1.5 py-0.5 rounded-md opacity-65"
+                            style={{
+                              background: rgba(settings.textColor, 0.06),
+                              color: settings.textColor,
+                            }}
+                          >
+                            {item.category}
+                          </span>
+                        </div>
+                        <p className="text-[11px] truncate opacity-50" style={{ color: settings.textColor }}>
+                          {extractDomain(item.url)}
+                        </p>
+                      </div>
+                      <ArrowUpRight className="w-4 h-4 opacity-50 flex-shrink-0" style={{ color: settings.textColor }} />
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+
+            {/* 2. Search History */}
             {historyMatches.length > 0 && (
-              <div className="p-2" style={{ borderBottom: `1px solid ${settings.accentColor}20` }}>
-                <div className="flex items-center justify-between px-2 mb-1">
-                  <span className="text-xs" style={{ color: settings.accentColor }}>Search History</span>
+              <div
+                className="p-2"
+                style={{
+                  borderBottom:
+                    suggestions.length > 0 ? `1px solid ${rgba(settings.textColor, 0.07)}` : undefined,
+                }}
+              >
+                <div className="flex items-center justify-between px-2.5 py-1">
+                  <span className="text-[11px] font-medium opacity-55" style={{ color: settings.textColor }}>
+                    Recent Searches
+                  </span>
                   <button
+                    type="button"
                     onClick={(e) => {
                       e.stopPropagation();
                       clearSearchHistory();
                     }}
-                    className="text-xs px-2 py-0.5 rounded hover:opacity-80 transition-opacity"
-                    style={{ color: settings.accentColor }}
+                    className="text-[11px] px-2 py-0.5 rounded hover:opacity-80 transition-opacity opacity-60"
+                    style={{ color: settings.textColor }}
                   >
-                    Clear All
+                    Clear
                   </button>
                 </div>
-                {historyMatches.map((item, idx) => (
-                  <div
-                    key={item}
-                    className="flex items-center gap-2 px-3 py-2 rounded-lg transition-colors"
-                    style={{
-                      backgroundColor: selectedIndex === idx || hoveredHistory === item
-                        ? `${settings.accentColor}15`
-                        : 'transparent',
-                    }}
-                    onMouseEnter={() => setHoveredHistory(item)}
-                    onMouseLeave={() => setHoveredHistory(null)}
-                  >
-                    <button
-                      onClick={() => handleSearch(item)}
-                      className="flex items-center gap-3 flex-1 min-w-0"
-                    >
-                      <Clock className="w-4 h-4 flex-shrink-0" style={{ color: settings.accentColor }} />
-                      <span className="text-sm flex-1 text-left truncate" style={{ color: settings.textColor }}>{item}</span>
-                      <ArrowRight className="w-4 h-4 flex-shrink-0" style={{ color: settings.accentColor }} />
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        removeSearchHistory(item);
-                      }}
-                      className="p-1 rounded transition-all duration-200"
+                {historyMatches.map((item, idx) => {
+                  const navIdx = quickMatches.length + idx;
+                  const isSelected = selectedIndex === navIdx;
+                  return (
+                    <div
+                      key={item}
+                      className="flex items-center gap-2 px-3 py-2 rounded-xl transition-colors"
                       style={{
-                        opacity: hoveredHistory === item ? 1 : 0,
-                        visibility: hoveredHistory === item ? 'visible' : 'hidden',
+                        backgroundColor:
+                          isSelected || hoveredHistory === item
+                            ? rgba(settings.textColor, 0.07)
+                            : 'transparent',
                       }}
-                      title="Delete"
+                      onMouseEnter={() => {
+                        setHoveredHistory(item);
+                        setSelectedIndex(navIdx);
+                      }}
+                      onMouseLeave={() => setHoveredHistory(null)}
                     >
-                      <Trash2 className="w-3.5 h-3.5 text-red-400 hover:text-red-300" />
-                    </button>
-                  </div>
-                ))}
+                      <button
+                        type="button"
+                        onClick={() => handleSearch(item)}
+                        className="flex items-center gap-3 flex-1 min-w-0 text-left"
+                      >
+                        <Clock className="w-3.5 h-3.5 flex-shrink-0 opacity-50" style={{ color: settings.textColor }} />
+                        <span className="text-sm flex-1 truncate" style={{ color: settings.textColor }}>
+                          {item}
+                        </span>
+                      </button>
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          removeSearchHistory(item);
+                        }}
+                        className="p-1 rounded transition-opacity opacity-50 hover:opacity-100"
+                        title="Remove"
+                      >
+                        <Trash2 className="w-3.5 h-3.5 text-red-400" />
+                      </button>
+                    </div>
+                  );
+                })}
               </div>
             )}
 
-            {/* Suggestions */}
+            {/* 3. Web Suggestions */}
             {suggestions.length > 0 && (
               <div className="p-2">
-                <div className="text-xs px-2 mb-1" style={{ color: settings.accentColor }}>Suggestions</div>
-                {suggestions.map((item, idx) => (
-                  <button
-                    key={item}
-                    onClick={() => handleSearch(item)}
-                    className="w-full flex items-center gap-3 px-3 py-2 rounded-lg transition-colors"
-                    style={{
-                      backgroundColor: selectedIndex === idx + historyMatches.length ? `${settings.accentColor}20` : 'transparent',
-                    }}
-                  >
-                    <Search className="w-4 h-4" style={{ color: settings.accentColor }} />
-                    <span className="text-sm flex-1 text-left" style={{ color: settings.textColor }}>{item}</span>
-                    <ArrowRight className="w-4 h-4" style={{ color: settings.accentColor }} />
-                  </button>
-                ))}
+                <div className="flex items-center gap-1.5 px-2.5 py-1 text-[11px] font-medium opacity-55" style={{ color: settings.textColor }}>
+                  <Sparkles className="w-3 h-3" />
+                  <span>Suggestions</span>
+                </div>
+                {suggestions.map((item, idx) => {
+                  const navIdx = quickMatches.length + historyMatches.length + idx;
+                  const isSelected = selectedIndex === navIdx;
+                  return (
+                    <button
+                      key={item}
+                      type="button"
+                      onClick={() => handleSearch(item)}
+                      onMouseEnter={() => setSelectedIndex(navIdx)}
+                      className="w-full flex items-center gap-3 px-3 py-2 rounded-xl transition-colors text-left"
+                      style={{
+                        backgroundColor: isSelected ? rgba(settings.textColor, 0.08) : 'transparent',
+                      }}
+                    >
+                      <Search className="w-3.5 h-3.5 opacity-50 flex-shrink-0" style={{ color: settings.textColor }} />
+                      <span className="text-sm flex-1 truncate" style={{ color: settings.textColor }}>
+                        {item}
+                      </span>
+                      <ArrowUpRight className="w-3.5 h-3.5 opacity-40" style={{ color: settings.textColor }} />
+                    </button>
+                  );
+                })}
               </div>
             )}
           </motion.div>

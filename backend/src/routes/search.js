@@ -2,49 +2,76 @@ import express from 'express';
 
 export const searchRouter = express.Router();
 
+async function fetchWithTimeout(url, timeoutMs = 2500) {
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { signal: controller.signal });
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // Search suggestions
 searchRouter.get('/suggest', async (req, res) => {
   const { q, engine = 'google' } = req.query;
 
-  if (!q || q.length < 2) {
+  if (!q || String(q).length < 2) {
     return res.json({ suggestions: [] });
   }
+
+  const query = String(q);
 
   try {
     let suggestions = [];
 
     if (engine === 'google') {
-      // Google suggestions API
-      const response = await fetch(
-        `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(q)}`
+      const response = await fetchWithTimeout(
+        `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`
       );
       const data = await response.json();
       suggestions = data[1] || [];
+    } else if (engine === 'bing') {
+      const response = await fetchWithTimeout(
+        `https://api.bing.com/osjson.aspx?query=${encodeURIComponent(query)}`
+      );
+      const data = await response.json();
+      suggestions = data[1] || [];
+    } else if (engine === 'baidu') {
+      const response = await fetchWithTimeout(
+        `https://suggestion.baidu.com/su?wd=${encodeURIComponent(query)}&action=opensearch`
+      );
+      const buffer = await response.arrayBuffer();
+      const decoder = new TextDecoder('gbk');
+      const text = decoder.decode(buffer);
+      const data = JSON.parse(text);
+      suggestions = data[1] || [];
     } else if (engine === 'youtube') {
-      // YouTube uses Google suggestions with "youtube" context
-      const response = await fetch(
-        `https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(q)}`
+      const response = await fetchWithTimeout(
+        `https://suggestqueries.google.com/complete/search?client=youtube&ds=yt&q=${encodeURIComponent(query)}`
       );
       const text = await response.text();
-      // Parse JSONP response
       const match = text.match(/\[.*\]/);
       if (match) {
         const data = JSON.parse(match[0]);
         suggestions = (data[1] || []).map(item => item[0]);
       }
     } else if (engine === 'github') {
-      // GitHub doesn't have suggestion API, use Google with "github" prefix
-      const response = await fetch(
-        `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent('github ' + q)}`
+      const response = await fetchWithTimeout(
+        `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent('github ' + query)}`
       );
       const data = await response.json();
-      // Remove "github " prefix from suggestions
       suggestions = (data[1] || []).map(s => s.replace(/^github\s+/i, ''));
+    } else {
+      const response = await fetchWithTimeout(
+        `https://suggestqueries.google.com/complete/search?client=firefox&q=${encodeURIComponent(query)}`
+      );
+      const data = await response.json();
+      suggestions = data[1] || [];
     }
 
-    res.json({ suggestions: suggestions.slice(0, 10) });
-  } catch (err) {
-    // Return empty on error
+    res.json({ suggestions: suggestions.slice(0, 8) });
+  } catch {
     res.json({ suggestions: [] });
   }
 });

@@ -1,5 +1,5 @@
 import express from 'express';
-import { readFileSync, writeFileSync, existsSync } from 'fs';
+import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 import { requireAuth } from '../middleware/auth.js';
@@ -17,6 +17,10 @@ const readData = () => {
 };
 
 const writeData = (data) => {
+  const dir = dirname(DATA_PATH);
+  if (!existsSync(dir)) {
+    mkdirSync(dir, { recursive: true });
+  }
   writeFileSync(DATA_PATH, JSON.stringify(data, null, 2));
 };
 
@@ -31,10 +35,13 @@ appsRouter.get('/', (req, res) => {
 });
 
 // Update all apps
-appsRouter.put('/', (req, res) => {
+appsRouter.put('/', requireAuth, (req, res) => {
   try {
     const data = req.body;
-    writeData(data);
+    if (!data || !Array.isArray(data.appGroups)) {
+      return res.status(400).json({ error: 'Invalid apps payload' });
+    }
+    writeData({ appGroups: data.appGroups });
     res.json({ success: true });
   } catch (err) {
     res.status(500).json({ error: 'Failed to update apps data' });
@@ -42,7 +49,7 @@ appsRouter.put('/', (req, res) => {
 });
 
 // Add a single app to a group
-appsRouter.post('/group/:groupId/app', (req, res) => {
+appsRouter.post('/group/:groupId/app', requireAuth, (req, res) => {
   try {
     const { groupId } = req.params;
     const app = req.body;
@@ -64,7 +71,7 @@ appsRouter.post('/group/:groupId/app', (req, res) => {
 });
 
 // Delete an app
-appsRouter.delete('/group/:groupId/app/:appId', (req, res) => {
+appsRouter.delete('/group/:groupId/app/:appId', requireAuth, (req, res) => {
   try {
     const { groupId, appId } = req.params;
     const data = readData();

@@ -1,5 +1,7 @@
 import { create } from 'zustand';
 import type { AppGroup, Bookmark, SearchProvider } from '../types';
+import { getAuthHeaders, clearAuthToken } from '../services/api';
+import { useSettingsStore } from './useSettingsStore';
 
 interface AppState {
   appGroups: AppGroup[];
@@ -40,6 +42,64 @@ const API_BASE = '/api';
 
 const generateId = () => Math.random().toString(36).substring(2, 9);
 
+async function syncApps(appGroups: AppGroup[], rollback: () => void, successMsg?: string) {
+  try {
+    const res = await fetch(`${API_BASE}/apps`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ appGroups }),
+    });
+    if (res.status === 401) {
+      clearAuthToken();
+      useSettingsStore.getState().setEditMode(false);
+      rollback();
+      useSettingsStore.getState().notify('认证已过期，请重新验证编辑密码', 'error');
+      return;
+    }
+    if (!res.ok) {
+      throw new Error('Failed to sync apps');
+    }
+    if (successMsg) {
+      useSettingsStore.getState().notify(successMsg, 'success');
+    }
+  } catch {
+    rollback();
+    useSettingsStore.getState().notify('保存失败，请检查网络连接', 'error');
+  }
+}
+
+async function syncBookmarks(bookmarks: Bookmark[], rollback: () => void, successMsg?: string) {
+  try {
+    const res = await fetch(`${API_BASE}/links`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+        ...getAuthHeaders(),
+      },
+      body: JSON.stringify({ bookmarks }),
+    });
+    if (res.status === 401) {
+      clearAuthToken();
+      useSettingsStore.getState().setEditMode(false);
+      rollback();
+      useSettingsStore.getState().notify('认证已过期，请重新验证编辑密码', 'error');
+      return;
+    }
+    if (!res.ok) {
+      throw new Error('Failed to sync bookmarks');
+    }
+    if (successMsg) {
+      useSettingsStore.getState().notify(successMsg, 'success');
+    }
+  } catch {
+    rollback();
+    useSettingsStore.getState().notify('保存失败，请检查网络连接', 'error');
+  }
+}
+
 export const useAppStore = create<AppState>((set, get) => ({
   appGroups: [],
   bookmarks: [],
@@ -52,13 +112,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`${API_BASE}/apps`);
       const data = await res.json();
-      const appGroups = data.appGroups.map((g: AppGroup, idx: number) => ({
+      const appGroups = (data.appGroups || []).map((g: AppGroup, idx: number) => ({
         ...g,
         id: g.id || `group-${idx}`,
-        apps: g.apps.map((a, aidx) => ({ ...a, id: a.id || `app-${idx}-${aidx}` })),
+        apps: (g.apps || []).map((a, aidx) => ({ ...a, id: a.id || `app-${idx}-${aidx}` })),
       }));
       set({ appGroups, loading: false });
-    } catch (err) {
+    } catch {
       set({ error: 'Failed to fetch apps', loading: false });
     }
   },
@@ -67,13 +127,13 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`${API_BASE}/links`);
       const data = await res.json();
-      const bookmarks = data.bookmarks.map((b: Bookmark, idx: number) => ({
+      const bookmarks = (data.bookmarks || []).map((b: Bookmark, idx: number) => ({
         ...b,
         id: b.id || `bookmark-${idx}`,
-        links: b.links.map((l, lidx) => ({ ...l, id: l.id || `link-${idx}-${lidx}` })),
+        links: (b.links || []).map((l, lidx) => ({ ...l, id: l.id || `link-${idx}-${lidx}` })),
       }));
       set({ bookmarks });
-    } catch (err) {
+    } catch {
       set({ error: 'Failed to fetch bookmarks' });
     }
   },
@@ -82,90 +142,66 @@ export const useAppStore = create<AppState>((set, get) => ({
     try {
       const res = await fetch(`${API_BASE}/providers`);
       const data = await res.json();
-      const providers = data.providers.map((p: SearchProvider, idx: number) => ({
+      const providers = (data.providers || []).map((p: SearchProvider, idx: number) => ({
         ...p,
         id: p.id || `provider-${idx}`,
       }));
       set({ providers });
-    } catch (err) {
+    } catch {
       set({ error: 'Failed to fetch providers' });
     }
   },
 
   addApp: async (groupId, app) => {
-    const { appGroups } = get();
+    const prev = get().appGroups;
     const newApp = { ...app, id: generateId() };
-    const updated = appGroups.map((g) =>
+    const updated = prev.map((g) =>
       g.id === groupId ? { ...g, apps: [...g.apps, newApp] } : g
     );
     set({ appGroups: updated });
-    await fetch(`${API_BASE}/apps`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appGroups: updated }),
-    });
+    await syncApps(updated, () => set({ appGroups: prev }), `已添加「${app.name}」`);
   },
 
   updateApp: async (groupId, appId, app) => {
-    const { appGroups } = get();
-    const updated = appGroups.map((g) =>
+    const prev = get().appGroups;
+    const updated = prev.map((g) =>
       g.id === groupId
         ? { ...g, apps: g.apps.map((a) => (a.id === appId ? { ...a, ...app } : a)) }
         : g
     );
     set({ appGroups: updated });
-    await fetch(`${API_BASE}/apps`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appGroups: updated }),
-    });
+    await syncApps(updated, () => set({ appGroups: prev }), '应用已更新');
   },
 
   deleteApp: async (groupId, appId) => {
-    const { appGroups } = get();
-    const updated = appGroups.map((g) =>
+    const prev = get().appGroups;
+    const updated = prev.map((g) =>
       g.id === groupId ? { ...g, apps: g.apps.filter((a) => a.id !== appId) } : g
     );
     set({ appGroups: updated });
-    await fetch(`${API_BASE}/apps`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appGroups: updated }),
-    });
+    await syncApps(updated, () => set({ appGroups: prev }), '应用已删除');
   },
 
   addAppGroup: async (group) => {
-    const { appGroups } = get();
+    const prev = get().appGroups;
     const newGroup = { ...group, id: generateId(), apps: [] };
-    const updated = [...appGroups, newGroup];
+    const updated = [...prev, newGroup];
     set({ appGroups: updated });
-    await fetch(`${API_BASE}/apps`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appGroups: updated }),
-    });
+    await syncApps(updated, () => set({ appGroups: prev }), `已创建分组「${group.category}」`);
   },
 
   updateAppGroup: async (groupId, group) => {
-    const { appGroups } = get();
-    const updated = appGroups.map((g) => (g.id === groupId ? { ...g, ...group } : g));
+    const prev = get().appGroups;
+    const updated = prev.map((g) => (g.id === groupId ? { ...g, ...group } : g));
     set({ appGroups: updated });
-    await fetch(`${API_BASE}/apps`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appGroups: updated }),
-    });
+    await syncApps(updated, () => set({ appGroups: prev }), '分组已更新');
   },
 
   deleteAppGroup: async (groupId) => {
-    const { appGroups } = get();
-    const updated = appGroups.filter((g) => g.id !== groupId);
+    const prev = get().appGroups;
+    const updated = prev.filter((g) => g.id !== groupId);
     set({ appGroups: updated });
-    await fetch(`${API_BASE}/apps`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appGroups: updated }),
-    });
+    await syncApps(updated, () => set({ appGroups: prev }), '分组已删除');
   },
 
   toggleGroupCollapse: (groupId) => {
@@ -178,79 +214,55 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   addBookmark: async (categoryId, link) => {
-    const { bookmarks } = get();
+    const prev = get().bookmarks;
     const newLink = { ...link, id: generateId() };
-    const updated = bookmarks.map((b) =>
+    const updated = prev.map((b) =>
       b.id === categoryId ? { ...b, links: [...b.links, newLink] } : b
     );
     set({ bookmarks: updated });
-    await fetch(`${API_BASE}/links`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookmarks: updated }),
-    });
+    await syncBookmarks(updated, () => set({ bookmarks: prev }), `已添加书签「${link.name}」`);
   },
 
   updateBookmark: async (categoryId, linkId, link) => {
-    const { bookmarks } = get();
-    const updated = bookmarks.map((b) =>
+    const prev = get().bookmarks;
+    const updated = prev.map((b) =>
       b.id === categoryId
         ? { ...b, links: b.links.map((l) => (l.id === linkId ? { ...l, ...link } : l)) }
         : b
     );
     set({ bookmarks: updated });
-    await fetch(`${API_BASE}/links`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookmarks: updated }),
-    });
+    await syncBookmarks(updated, () => set({ bookmarks: prev }), '书签已更新');
   },
 
   deleteBookmark: async (categoryId, linkId) => {
-    const { bookmarks } = get();
-    const updated = bookmarks.map((b) =>
+    const prev = get().bookmarks;
+    const updated = prev.map((b) =>
       b.id === categoryId ? { ...b, links: b.links.filter((l) => l.id !== linkId) } : b
     );
     set({ bookmarks: updated });
-    await fetch(`${API_BASE}/links`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookmarks: updated }),
-    });
+    await syncBookmarks(updated, () => set({ bookmarks: prev }), '书签已删除');
   },
 
   addBookmarkCategory: async (category) => {
-    const { bookmarks } = get();
+    const prev = get().bookmarks;
     const newCategory = { ...category, id: generateId(), links: [] };
-    const updated = [...bookmarks, newCategory];
+    const updated = [...prev, newCategory];
     set({ bookmarks: updated });
-    await fetch(`${API_BASE}/links`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookmarks: updated }),
-    });
+    await syncBookmarks(updated, () => set({ bookmarks: prev }), `已创建分类「${category.category}」`);
   },
 
   updateBookmarkCategory: async (categoryId, category) => {
-    const { bookmarks } = get();
-    const updated = bookmarks.map((b) => (b.id === categoryId ? { ...b, ...category } : b));
+    const prev = get().bookmarks;
+    const updated = prev.map((b) => (b.id === categoryId ? { ...b, ...category } : b));
     set({ bookmarks: updated });
-    await fetch(`${API_BASE}/links`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookmarks: updated }),
-    });
+    await syncBookmarks(updated, () => set({ bookmarks: prev }), '分类已更新');
   },
 
   deleteBookmarkCategory: async (categoryId) => {
-    const { bookmarks } = get();
-    const updated = bookmarks.filter((b) => b.id !== categoryId);
+    const prev = get().bookmarks;
+    const updated = prev.filter((b) => b.id !== categoryId);
     set({ bookmarks: updated });
-    await fetch(`${API_BASE}/links`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookmarks: updated }),
-    });
+    await syncBookmarks(updated, () => set({ bookmarks: prev }), '分类已删除');
   },
 
   toggleBookmarkCollapse: (categoryId) => {
@@ -263,8 +275,8 @@ export const useAppStore = create<AppState>((set, get) => ({
   },
 
   reorderApps: async (groupId, fromIndex, toIndex) => {
-    const { appGroups } = get();
-    const updated = appGroups.map((g) => {
+    const prev = get().appGroups;
+    const updated = prev.map((g) => {
       if (g.id !== groupId) return g;
       const apps = [...g.apps];
       const [removed] = apps.splice(fromIndex, 1);
@@ -272,29 +284,21 @@ export const useAppStore = create<AppState>((set, get) => ({
       return { ...g, apps };
     });
     set({ appGroups: updated });
-    await fetch(`${API_BASE}/apps`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appGroups: updated }),
-    });
+    await syncApps(updated, () => set({ appGroups: prev }));
   },
 
   reorderGroups: async (fromIndex, toIndex) => {
-    const { appGroups } = get();
-    const updated = [...appGroups];
+    const prev = get().appGroups;
+    const updated = [...prev];
     const [removed] = updated.splice(fromIndex, 1);
     updated.splice(toIndex, 0, removed);
     set({ appGroups: updated });
-    await fetch(`${API_BASE}/apps`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ appGroups: updated }),
-    });
+    await syncApps(updated, () => set({ appGroups: prev }));
   },
 
   reorderBookmarks: async (categoryId, fromIndex, toIndex) => {
-    const { bookmarks } = get();
-    const updated = bookmarks.map((b) => {
+    const prev = get().bookmarks;
+    const updated = prev.map((b) => {
       if (b.id !== categoryId) return b;
       const links = [...b.links];
       const [removed] = links.splice(fromIndex, 1);
@@ -302,23 +306,15 @@ export const useAppStore = create<AppState>((set, get) => ({
       return { ...b, links };
     });
     set({ bookmarks: updated });
-    await fetch(`${API_BASE}/links`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookmarks: updated }),
-    });
+    await syncBookmarks(updated, () => set({ bookmarks: prev }));
   },
 
   reorderBookmarkCategories: async (fromIndex, toIndex) => {
-    const { bookmarks } = get();
-    const updated = [...bookmarks];
+    const prev = get().bookmarks;
+    const updated = [...prev];
     const [removed] = updated.splice(fromIndex, 1);
     updated.splice(toIndex, 0, removed);
     set({ bookmarks: updated });
-    await fetch(`${API_BASE}/links`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ bookmarks: updated }),
-    });
+    await syncBookmarks(updated, () => set({ bookmarks: prev }));
   },
 }));
