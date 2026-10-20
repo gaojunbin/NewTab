@@ -3,10 +3,16 @@
 @tailwind utilities;
 
 :root {
-  --color-primary: #1a1a2e;
-  --color-accent: #e94560;
-  --color-background: #16213e;
-  --glass-blur: 12px;
+  --nt-bg: #FAF9F5;
+  --nt-text: #141413;
+  --nt-accent: #6B6A65;
+  --nt-surface: rgba(0, 0, 0, 0.03);
+  --nt-surface-hover: rgba(0, 0, 0, 0.055);
+  --nt-surface-elevated: rgba(255, 255, 255, 0.88);
+  --nt-border: rgba(0, 0, 0, 0.075);
+  --nt-border-hover: rgba(0, 0, 0, 0.15);
+  --nt-shadow: 0 2px 10px -2px rgba(0, 0, 0, 0.04), 0 12px 32px -8px rgba(0, 0, 0, 0.06);
+  --nt-shadow-hover: 0 8px 24px -4px rgba(0, 0, 0, 0.07), 0 20px 44px -12px rgba(0, 0, 0, 0.09);
 }
 
 * {
@@ -20,15 +26,16 @@ html {
 body {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Helvetica Neue', 'Helvetica', 'Arial', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', 'Inter', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei', 'Helvetica Neue', sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
   overflow-x: hidden;
-  font-feature-settings: 'kern' 1, 'liga' 1;
-  letter-spacing: -0.01em;
+  font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  letter-spacing: -0.011em;
 }
 
-/* Custom Scrollbar */
+/* Subtle Custom Scrollbar */
 ::-webkit-scrollbar {
   width: 6px;
   height: 6px;
@@ -39,84 +46,70 @@ body {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.2);
-  border-radius: 3px;
+  background: rgba(128, 128, 128, 0.22);
+  border-radius: 9999px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(128, 128, 128, 0.38);
 }
 
-/* Glass Effect Utilities */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+/* Apple / OpenAI Surface Utilities */
 @layer utilities {
-  .glass {
-    @apply backdrop-blur-[12px] bg-white/10 border border-white/20;
+  .nt-glass {
+    backdrop-filter: blur(20px) saturate(180%);
+    -webkit-backdrop-filter: blur(20px) saturate(180%);
+    background: var(--nt-surface);
+    border: 1px solid var(--nt-border);
   }
 
-  .glass-dark {
-    @apply backdrop-blur-[12px] bg-black/20 border border-white/10;
+  .nt-glass-elevated {
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    background: var(--nt-surface-elevated);
+    border: 1px solid var(--nt-border);
+    box-shadow: var(--nt-shadow);
   }
 
-  .glass-light {
-    @apply backdrop-blur-[12px] bg-white/30 border border-white/40;
+  .nt-card {
+    background: var(--nt-surface);
+    border: 1px solid var(--nt-border);
+    transition: background-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+                border-color 220ms cubic-bezier(0.16, 1, 0.3, 1),
+                box-shadow 220ms cubic-bezier(0.16, 1, 0.3, 1),
+                transform 220ms cubic-bezier(0.16, 1, 0.3, 1);
   }
 
-  .text-shadow {
-    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  .nt-card:hover {
+    background: var(--nt-surface-hover);
+    border-color: var(--nt-border-hover);
+    box-shadow: var(--nt-shadow-hover);
   }
 
-  .hover-lift {
-    @apply transition-transform duration-200 hover:-translate-y-1;
+  .nt-kbd {
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    font-size: 11px;
+    line-height: 1;
+    padding: 3px 6px;
+    border-radius: 6px;
+    background: var(--nt-surface);
+    border: 1px solid var(--nt-border);
   }
-
-  .hover-glow {
-    @apply transition-shadow duration-200;
-  }
-
-  .hover-glow:hover {
-    box-shadow: 0 0 20px rgba(var(--color-accent-rgb), 0.4);
-  }
-}
-
-/* Focus Ring Styles */
-.focus-ring {
-  @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-transparent;
-}
-
-/* Animation Delays */
-.delay-100 { animation-delay: 100ms; }
-.delay-200 { animation-delay: 200ms; }
-.delay-300 { animation-delay: 300ms; }
-.delay-400 { animation-delay: 400ms; }
-.delay-500 { animation-delay: 500ms; }
-
-/* App Icon Hover Effect */
-.app-icon {
-  @apply transition-all duration-200 ease-out;
-}
-
-.app-icon:hover {
-  @apply scale-110;
-  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.3));
 }
 
 /* Input Styles */
 input[type="text"],
 input[type="search"],
-input[type="url"] {
-  @apply bg-transparent border-none focus:outline-none;
-}
-
-/* Modal Backdrop */
-.modal-backdrop {
-  @apply fixed inset-0 bg-black/50 backdrop-blur-sm z-50;
-}
-
-/* Tooltip */
-.tooltip {
-  @apply absolute z-50 px-2 py-1 text-xs rounded bg-gray-900 text-white opacity-0 invisible transition-all duration-200;
-}
-
-.tooltip-trigger:hover .tooltip {
-  @apply opacity-100 visible;
+input[type="url"],
+input[type="password"] {
+  @apply bg-transparent focus:outline-none;
 }

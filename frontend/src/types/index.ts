@@ -43,6 +43,9 @@ export interface WeatherData {
   humidity: number;
   icon: string;
   feelsLike?: number;
+  windSpeed?: number;
+  high?: number;
+  low?: number;
 }
 
 export interface GeoLocation {
@@ -63,10 +66,15 @@ export interface Countdown {
 
 export interface Settings {
   theme: 'light' | 'dark' | 'auto';
+  presetName?: string;
   primaryColor: string;
   accentColor: string;
   textColor: string;
   backgroundColor: string;
+  layoutMode: 'immersive' | 'dashboard';
+  cardDensity: 'comfortable' | 'compact';
+  showAppUrl: boolean;
+  showBookmarkFavicons: boolean;
   showClock: boolean;
   showWeather: boolean;
   showGreeting: boolean;
@@ -84,8 +92,16 @@ export interface Settings {
 
 export type ThemePreset = {
   name: string;
+  label?: string;
   primary: string;
   accent: string;
   text: string;
   isDark: boolean;
+  badge?: string;
+};
+
+export interface ToastItem {
+  id: string;
+  message: string;
+  type?: 'success' | 'error' | 'info';
 }

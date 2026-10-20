@@ -1,5 +1,5 @@
 import express from 'express';
-import { generateToken } from '../middleware/auth.js';
+import { generateToken, isTokenValid } from '../middleware/auth.js';
 
 export const authRouter = express.Router();
 
@@ -22,8 +22,13 @@ authRouter.post('/verify', (req, res) => {
   return res.status(401).json({ success: false, message: 'Invalid password' });
 });
 
-// Check if password is required
+// Check if password is required and if current token is valid
 authRouter.get('/required', (req, res) => {
   const editPassword = process.env.EDIT_PASSWORD || '';
-  res.json({ required: !!editPassword });
+  const authHeader = req.headers.authorization;
+  const token = authHeader?.startsWith('Bearer ') ? authHeader.substring(7) : null;
+  res.json({
+    required: !!editPassword,
+    authenticated: isTokenValid(token),
+  });
 });

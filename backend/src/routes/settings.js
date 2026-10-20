@@ -41,7 +41,7 @@ settingsRouter.get('/', (req, res) => {
 });
 
 // Update settings
-settingsRouter.put('/', (req, res) => {
+settingsRouter.put('/', requireAuth, (req, res) => {
   try {
     writeSettings(req.body);
     res.json({ success: true });
@@ -72,13 +72,14 @@ settingsRouter.get('/export', (req, res) => {
 });
 
 // Import config
-settingsRouter.post('/import', upload.single('config'), (req, res) => {
+settingsRouter.post('/import', requireAuth, upload.single('config'), (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ error: 'No file uploaded' });
     }
 
     const data = JSON.parse(req.file.buffer.toString());
+    ensureDataDir();
 
     if (data.apps) {
       writeFileSync(join(DATA_DIR, 'apps.json'), JSON.stringify(data.apps, null, 2));
